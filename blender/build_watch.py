@@ -2,7 +2,7 @@
 Run with Blender 4.5+: blender -b --factory-startup --python blender/build_watch.py
 Geometry uses millimetre-inspired units: 40 mm case = 4 scene units.
 """
-import bpy, math, os, json
+import bpy, math, os, json, gzip
 from mathutils import Vector
 from math import sin, cos, pi
 
@@ -16,15 +16,52 @@ def material(name,color,metal=0,rough=.3):
     p=m.node_tree.nodes.get('Principled BSDF'); p.inputs['Base Color'].default_value=(*color,1)
     p.inputs['Metallic'].default_value=metal; p.inputs['Roughness'].default_value=rough
     return m
-steel=material('Acier brosse',(.57,.60,.63),1,.28)
-polish=material('Acier poli',(.78,.81,.84),1,.15)
-side=material('Acier lateral',(.35,.39,.43),1,.26)
+steel=material('Acier 316L brosse longitudinalement',(.62,.65,.68),1,.31)
+polish=material('Acier 316L chanfreins polis miroir',(.83,.85,.88),1,.115)
+side=material('Acier 316L flancs satines',(.42,.46,.50),1,.26)
+for key in ['Anisotropic IOR Level','Anisotropic']:
+    if key in steel.node_tree.nodes.get('Principled BSDF').inputs:
+        steel.node_tree.nodes.get('Principled BSDF').inputs[key].default_value=.62
 blue=material('Cadran bleu nuit',(.006,.027,.059),.42,.32)
 waffle=material('Carres guilloches',(.012,.044,.083),.48,.27)
 white=material('SuperLuminova et typographie',(.93,.95,.91),.08,.35)
 ink=material('Date noire',(.012,.018,.025),.0,.5)
 
 def loc(p): return (p[0],-p[2],p[1])
+
+def prism(name,outline,z0,z1,mat,bevel=.01,center=(0,0,0),slope=0,angle=0):
+    """Single machined piece. Concave stepped outline, satin face, polished bevel."""
+    cx,cy,cz=center; verts=[]
+    for z in [z0,z1]:
+        for x,y in outline:
+            xx=x*cos(angle)+y*sin(angle); yy=y*cos(angle)-x*sin(angle)
+            verts.append(loc((cx+xx,cy+yy,cz+z+slope*yy)))
+    n=len(outline);faces=[tuple(range(n-1,-1,-1)),tuple(range(n,n*2))]
+    faces += [(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)]
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
+    o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o)
+    for m in [mat,polish,side]:mesh.materials.append(m)
+    for f in mesh.polygons:f.material_index=0 if f.index==1 else 2
+    bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+    bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT')
+    if bevel:
+        mod=o.modifiers.new('Chanfreins polis usines','BEVEL');mod.width=bevel;mod.segments=3;mod.material=1
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+        mod=o.modifiers.new('Normales ponderees','WEIGHTED_NORMAL');mod.keep_sharp=True
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+    o.select_set(False);return o
+
+def lathe(name,profile,mat,segments=160):
+    verts=[];faces=[]
+    for r,z in profile:verts += [loc((r*cos(2*pi*i/segments),r*sin(2*pi*i/segments),z)) for i in range(segments)]
+    for row in range(len(profile)-1):
+        for i in range(segments):
+            j=(i+1)%segments;faces.append((row*segments+i,row*segments+j,(row+1)*segments+j,(row+1)*segments+i))
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
+    o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o);finish(o,name,mat)
+    for f in mesh.polygons:f.use_smooth=True
+    return o
 def finish(o,name,mat,bevel=0):
     o.name=name; o.data.materials.append(mat)
     if bevel:
@@ -60,20 +97,17 @@ def text(body,p,size,mat,name=None):
     return o
 
 # Angular tonneau, polished bevel and integrated bracelet shoulders.
-outline=[(-1.34,2.12),(1.34,2.12),(1.66,1.65),(1.96,.70),(2.0,0),(1.94,-.73),(1.64,-1.64),(1.30,-2.10),(-1.30,-2.10),(-1.64,-1.64),(-1.94,-.73),(-2.0,0),(-1.96,.70),(-1.66,1.65)]
-verts=[loc((x,y,z)) for z in [-.21,.21] for x,y in outline]; n=len(outline)
-faces=[tuple(range(n-1,-1,-1)),tuple(range(n,n*2))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)]
-mesh=bpy.data.meshes.new('Boitier tonneau'); mesh.from_pydata(verts,[],faces); mesh.update()
-o=bpy.data.objects.new('Boitier PRX 40 mm',mesh); bpy.context.collection.objects.link(o); finish(o,o.name,steel,.075)
-ring('Lunette polie',1.69,1.82,.245,.37,polish)
-ring('Joint interieur',1.655,1.695,.28,.325,side)
+outline=[(-1.30,1.985),(1.30,1.985),(1.56,1.69),(1.83,1.10),(1.98,.48),(2.0,-.28),(1.82,-1.16),(1.51,-1.75),(1.27,-1.985),(-1.27,-1.985),(-1.51,-1.75),(-1.82,-1.16),(-2.,-.28),(-1.98,.48),(-1.83,1.10),(-1.56,1.69)]
+prism('Boitier PRX 40 mm - tonneau et facettes',outline,-.24,.215,steel,.045)
+lathe('Lunette polie - profil tourne',[(1.695,.205),(1.805,.21),(1.845,.245),(1.849,.292),(1.826,.330),(1.775,.351),(1.700,.351),(1.669,.332),(1.666,.291),(1.695,.205)],polish)
+lathe('Rehaut interieur satine',[(1.625,.30),(1.669,.30),(1.669,.337),(1.642,.337),(1.625,.30)],side)
 cyl('Cadran', (0,0,.295),1.66,.035,blue)
 # The tiny raised waffle squares are genuine geometry.
 for ix in range(-15,16):
     for iy in range(-15,16):
         x=ix*.103; y=iy*.103
         if x*x+y*y<1.59**2 and not (.92<x<1.48 and -.19<y<.19):
-            box('Guillochage', (x,y,.321),(.081,.081,.008),waffle,0)
+            box('Guillochage en relief', (x,y,.314),(.083,.083,.014),waffle,.004)
 for i in range(60):
     a=2*pi*i/60; big=(i%5==0)
     if i!=15:
@@ -88,22 +122,27 @@ text('1853',(0,.62,.35),.125,white)
 text('PRX',(0,-.64,.35),.16,white)
 text('POWERMATIC 80',(0,-.84,.35),.079,white)
 text('SWISS   MADE',(0,-1.48,.35),.057,white)
-# Raised hands, 10:08 as in supplied reference.
-for name,a,length,width,z in [('Aiguille heures',-pi/3,1.03,.105,.415),('Aiguille minutes',pi*.265,1.39,.073,.445)]:
-    cx=sin(a)*length*.43; cy=cos(a)*length*.43
-    box(name,(cx,cy,z),(width,length,.038),polish,.017,-a)
-    box(name+' lume',(cx,cy,z+.022),(width*.49,length*.78,.008),white,.007,-a)
-box('Trotteuse',(-.21,-.37,.487),(.018,1.85,.018),polish,.004,.53)
-cyl('Pivot',(0,0,.50),.085,.045,polish,48)
-# Integrated tapering steel links; each has a narrow polished inset.
+# Tapered sword hands and counterweights, 10:08 as in supplied reference.
+for name,a,length,width,z in [('Aiguille heures',-pi/3,1.045,.102,.415),('Aiguille minutes',pi*4/15,1.392,.077,.453)]:
+    shape=[(-width*.39,-.165),(-width*.5,.20),(-width*.46,length*.78),(0,length),(width*.46,length*.78),(width*.5,.20),(width*.39,-.165)]
+    prism(name,shape,-.013,.013,polish,.003,(0,0,z),angle=a)
+    luminous=[(-width*.22,.20),(-width*.20,length*.77),(0,length*.90),(width*.20,length*.77),(width*.22,.20)]
+    prism(name+' insert lumineux',luminous,0,.004,white,.001,(0,0,z+.016),angle=a)
+prism('Trotteuse effilee',[(-.008,-.33),(-.008,1.53),(0,1.62),(.008,1.53),(.008,-.33)],-.006,.006,polish,.001,(0,0,.491),angle=-2.61)
+cyl('Pivot',(0,0,.512),.071,.032,polish,48)
+# True single-piece interlocking T links, with matching recess and protruding tongue.
+# Shorter bracelet matches the supplied packshot rather than an elongated ladder.
 for sign in [-1,1]:
-    for i in range(8):
-        yy=sign*(2.03+i*.315); width=2.64-i*.065
-        depth=-.05-(i*.035)**2
-        o=box('Maillon acier',(0,yy,depth),(width,.293,.25),steel,.025)
-        box('Centre maillon',(0,yy-.035*sign,depth+.132),(width*.72,.257,.025),steel,.012)
-        box('Reflet maillon',(0,yy-.109*sign,depth+.137),(width-.10,.018,.016),polish,.005)
-        box('Joint maillon',(0,yy+.148*sign,depth-.012),(width-.06,.014,.14),side,.005)
+    for i in range(6):
+        pitch=.286;yy=sign*(2.075+i*pitch);width=2.74-.080*i
+        tongue=width*.50;gap=.013;h=pitch
+        shape=[(-width/2,h*.50),(-tongue/2-gap,h*.50),(-tongue/2-gap,h*.30),(tongue/2+gap,h*.30),(tongue/2+gap,h*.50),(width/2,h*.50),(width/2,-h*.45),(tongue/2,-h*.45),(tongue/2,-h*.65),(-tongue/2,-h*.65),(-tongue/2,-h*.45),(-width/2,-h*.45)]
+        shape=[(x,-sign*y) for x,y in shape]
+        depth=-.010-.023*i*i
+        prism('Maillon %s %02d - T usine' % ('haut' if sign>0 else 'bas',i+1),shape,-.148,.115,steel,.016,(0,yy,depth),slope=-sign*.046*i)
+    end=[(-1.365,-.15),(-.76,-.15),(-.76,.11),(.76,.11),(.76,-.15),(1.365,-.15),(1.33,.19),(-1.33,.19)]
+    end=[(x,sign*y) for x,y in end]
+    prism('End-link ajuste aux epaules '+str(sign),end,-.13,.105,steel,.013,(0,sign*1.86,-.02))
 # Knurled crown, cylinder axis along X.
 bpy.ops.mesh.primitive_cylinder_add(vertices=72,radius=.22,depth=.25,location=loc((2.08,.02,.0)),rotation=(0,pi/2,0)); finish(bpy.context.object,'Couronne',polish,.015)
 for i in range(32):
@@ -115,6 +154,11 @@ watch=[o for o in bpy.context.scene.objects if o.type=='MESH']
 bpy.ops.object.select_all(action='DESELECT')
 for o in watch:o.select_set(True)
 bpy.context.view_layer.objects.active=watch[0]
+# Separate material groups first, retaining polished bevels instead of overwriting them.
+for obj in list(bpy.context.scene.objects):
+    if obj.type=='MESH' and len(obj.data.materials)>1:
+        bpy.ops.object.select_all(action='DESELECT');obj.select_set(True)
+        bpy.context.view_layer.objects.active=obj;bpy.ops.mesh.separate(type='MATERIAL')
 # One mesh per material keeps the website draw count small.
 for mat in [steel,polish,side,blue,waffle,white,ink]:
     obs=[o for o in list(bpy.context.scene.objects) if o.type=='MESH' and len(o.data.materials) and o.data.materials[0]==mat]
@@ -132,6 +176,8 @@ bpy.context.scene.frame_end=180;bpy.context.scene.render.fps=30;bpy.context.scen
 rig.location=(0,0,0);rig.rotation_euler=(0,0,0)
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT,'petit-prx.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
+with open(os.path.join(OUT,'petit-prx.glb'),'rb') as src,gzip.open(os.path.join(OUT,'petit-prx.glb.gz'),'wb',compresslevel=9) as dst:
+    dst.write(src.read())
 bpy.context.scene.frame_set(85)
 for screen in bpy.data.screens:
     for area in screen.areas:

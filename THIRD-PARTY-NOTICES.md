@@ -39,3 +39,6 @@ Three.js and GLTFLoader, RoomEnvironment, BufferGeometryUtils are used under the
 
 ## Branding and photography
 Logo from the existing Bijouterie Petit website. The PRX visual study reproduces the user-supplied Tissot watch reference; trademarks remain the property of their owners. This is a design preview, not an official Tissot model or manufacturer asset.
+
+## Refined version
+ScrollReveal, BlurText and SpotlightCard were retrieved through the React Bits registry plugin. Their interaction patterns are adapted to vanilla DOM in dist/reactbits-adapted.js; this is not a React component import. The vitrine image is from the historic website solitaire_diamant__p353673.html. Decorative ring/clock are illustrations, not inventory photographs.

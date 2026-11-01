@@ -11,3 +11,6 @@ Le formulaire de cette ébauche n'envoie rien : le webhook n8n reste à configur
 La preview porte `noindex,nofollow`. Les informations et services proviennent du site actuel, https://bijouteriepetit.boutiquesolo.com/. Les horaires ne sont pas publiés car ils sont contradictoires selon les sources. Le favicon est un monogramme provisoire.
 
 La navigation suit le principe des panneaux Card Nav ; le comportement est implémenté localement sans dépendance React. Les sources et licences tierces figurent dans THIRD-PARTY-NOTICES.md.
+
+## Direction revue
+La version publiée utilise un packshot officiel Tissot en préparation de la future vidéo. Le modèle 3D retravaillé reste dans blender/ et assets/ mais n’est plus chargé par le hero. Source externe Tissot ; vérifier droits et fournir une copie autorisée avant production.

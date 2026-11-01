@@ -2,13 +2,15 @@ import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
 import { RoomEnvironment } from './vendor/environments/RoomEnvironment.js';
 import { createLiquid } from './liquid.js';
+import { initReactBits } from './reactbits-adapted.js';
+initReactBits();
 
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas=document.querySelector('#watch');
 const hero=document.querySelector('.hero-scroll');
 const stage=document.querySelector('.hero-stage');
 const copy=document.querySelector('.hero-copy');
-const caption=document.querySelector('.watch-caption');
+const caption=document.querySelector('.hero-baseline');
 let liquid=null;
 try{liquid=createLiquid(document.querySelector('#liquid'));}catch(error){console.warn('Liquid fallback',error);}
 let renderer,scene,camera,model;
@@ -21,12 +23,13 @@ const smooth=(a,b,x)=>{let t=clamp((x-a)/(b-a));return t*t*(3-2*t)};
 try{
  renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setClearColor(0,0);
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.93;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.78;
  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(32,1,.1,100);camera.position.z=19;
- const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;pmrem.dispose();
+ const pmrem=new THREE.PMREMGenerator(renderer);const room=new THREE.Scene();room.background=new THREE.Color('#9b9a98');const panel=(x,y,z,w,h,v)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:v,side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);room.add(m);};panel(-4,4,5,2,12,'#ffffff');panel(5,1,3,1,12,'#ffffff');panel(0,7,1,12,2,'#fffaf0');panel(0,-4,5,10,1,'#f4f4f4');panel(-5,0,0,5,14,'#222222');scene.environment=pmrem.fromScene(room,.025).texture;pmrem.dispose();
  scene.add(new THREE.HemisphereLight(0xfffcf4,0x8c887c,.65));
  for(const [color,intensity,x,y,z] of [[0xffffff,2.6,-5,7,7],[0xffffff,1.6,6,1,6],[0xffe5aa,.7,1,-6,3]]){const light=new THREE.DirectionalLight(color,intensity);light.position.set(x,y,z);scene.add(light);}
  const onWatchLoaded=gltf=>{
+   gltf.scene.traverse(o=>{if(o.isMesh&&o.material.metalness>.8){o.material.color.multiplyScalar(.66);o.material.envMapIntensity=.85;}});
    model=new THREE.Group();model.add(gltf.scene);scene.add(model);
    const bounds=new THREE.Box3().setFromObject(gltf.scene),center=bounds.getCenter(new THREE.Vector3());gltf.scene.position.sub(center);
    modelReady=performance.now();canvas.classList.add('loaded');document.querySelector('.watch-loading').style.opacity=0;
@@ -45,11 +48,11 @@ function frame(now){requestAnimationFrame(frame);if(!visible||document.hidden||n
  const progress=reduce?0:clamp(-rect.top/Math.max(1,hero.offsetHeight-h));
  const enter=reduce?1:smooth(0,1.7,(now-modelReady)/1000);
  const depart=smooth(.18,1,progress);
- const xTarget=mobile?-.10:2.65;
- const yBase=mobile?-2.6:0;
+ const xTarget=0;
+ const yBase=mobile?-1.0:-.05;
  const y=yBase-(1-enter)*13+depart*15;
- const scale=mobile?Math.min(.50,w/780):Math.min(1.05,h/700);
- if(model){model.position.set(xTarget,y,0);model.scale.setScalar(scale);model.rotation.x=(1-enter)*.25-depart*.24+(reduce?0:pointer.y*.025);model.rotation.y=-.14+(1-enter)*.48+depart*.47+(reduce?0:pointer.x*.045);model.rotation.z=-.13+(1-enter)*-.16+depart*.20;
+ const scale=mobile?Math.min(.55,w/720):Math.min(.82,h/930);
+ if(model){model.position.set(xTarget,y,0);model.scale.setScalar(scale);model.rotation.x=(1-enter)*.25-depart*.24+(reduce?0:pointer.y*.025);model.rotation.y=-.20+(1-enter)*.48+depart*.47+(reduce?0:pointer.x*.045);model.rotation.z=-.06+(1-enter)*-.16+depart*.20;
  const point=new THREE.Vector3(xTarget,y,0).project(camera);weight.x=point.x*.5+.5;weight.y=-point.y*.5+.5;renderer.render(scene,camera);}
  liquid?.render(reduce?0:(now-started)/1000,weight,reduce?.7:enter*(1-.25*depart));
  copy.style.transform=`translateY(${-depart*90}px)`;copy.style.opacity=1-smooth(.32,.86,progress);

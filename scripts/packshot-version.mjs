@@ -1,0 +1,8 @@
+import fs from 'node:fs';
+let html=fs.readFileSync('dist/index.html','utf8');
+const image='https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw95c4331d/product-pictures/63f42767-a9f5-4cdd-b952-8ea7b82b7e0c_T137-407-11-041-00_shadow.png?sm=cut&sw=1000&sh=1000,gravity=center';
+html=html.replace(/<div id="watch-stage"[\s\S]*?<\/div><\/div>/,'<div id="watch-stage"><img class="hero-watch-photo" src="'+image.replaceAll('&','&amp;')+'" width="1000" height="1000" alt="Tissot PRX Powermatic 80, boîtier et bracelet acier, cadran bleu nuit" fetchpriority="high"></div>');
+html=html.replace('./app.js','./hero-packshot.js').replace('Le site historique de la maison présente la possibilité de fabriquer un bijou selon vos désirs : prenons le temps d\'en discuter ensemble.','La maison propose de fabriquer un bijou selon vos désirs : prenons le temps d\'en discuter ensemble.');
+fs.writeFileSync('dist/index.html',html);
+fs.appendFileSync('dist/refined.css','\n.hero-watch-photo{display:block;position:absolute;top:18%;left:24%;width:52%;height:66%;object-fit:contain;mix-blend-mode:multiply;will-change:transform;filter:drop-shadow(0 15px 12px #684b3812)}@media(max-width:760px){.hero-watch-photo{top:33%;left:0;width:100%;height:43%;}}\n');
+fs.appendFileSync('README.md','\n## Direction revue\nLa version publiée utilise un packshot officiel Tissot en préparation de la future vidéo. Le modèle 3D retravaillé reste dans blender/ et assets/ mais n’est plus chargé par le hero. Source externe Tissot ; vérifier droits et fournir une copie autorisée avant production.\n');
