@@ -1,0 +1,41 @@
+/* Bare signature: the watch is the left-hand subject on desktop. */
+.hero-logo{position:absolute;top:14svh;left:50%;transform:translateX(-50%);z-index:4;padding:0;border:0;box-shadow:none;background:none}
+.hero-logo .hero-signature{position:relative;top:auto;left:auto;transform:none;display:block;width:210px;max-width:68vw;height:auto}
+.univers .section-heading{padding:0!important;border:0;box-shadow:none;background:none!important;border-radius:0;margin-bottom:40px;isolation:auto}
+.univers .section-heading:before,.univers .section-heading:after{display:none}
+/* More opaque glass, while the gold can still be seen through the surface. */
+.liquid-glass:before{background:linear-gradient(135deg,#fff5df32,#b58e761f 50%,#fff3d624),#51382cb3}
+@media(min-width:761px){
+ .cinematic,.scene-stage{height:110svh;min-height:720px}
+ .product-box{left:26%;top:40svh;width:clamp(300px,30vw,460px);transform:translateX(-50%)}
+ .hero-logo{left:72%;top:43svh;transform:translate(-50%,-50%)}
+ .hero-logo .hero-signature{width:clamp(310px,31vw,470px);max-width:40vw}
+ .boutique{grid-template-columns:minmax(0,410px) minmax(0,450px);justify-content:center;gap:clamp(38px,6vw,90px);padding-top:76px;padding-bottom:76px}
+ .boutique-photo.liquid-glass{height:450px;border-radius:96px 96px 26px 26px}
+ .boutique-photo .photo-window{border-radius:84px 84px 16px 16px}
+ .boutique-copy.glass-panel{padding:28px 30px!important}
+ .boutique-copy h2{font-size:clamp(43px,4.1vw,58px);line-height:1.1;letter-spacing:-.9px}
+ .boutique-copy address{font-size:19px;line-height:1.65;margin:22px 0}
+ .boutique-copy .button{min-height:48px;padding:12px 23px}
+}
+@media(min-width:761px) and (max-width:1000px){
+ .boutique{grid-template-columns:minmax(0,340px) minmax(0,360px);gap:32px;padding-left:5%;padding-right:5%}
+ .boutique-photo.liquid-glass{height:400px}
+ .boutique-copy.glass-panel{padding:24px!important}
+ .boutique-copy h2{font-size:43px}
+}
+
+/* Leave wheel and touch gestures to the browser. The gold band scrolls with the document. */
+#gold-river.gold-document{position:absolute;inset:0 0 auto;height:0;overflow:hidden}
+#gold-river.gold-document canvas{position:absolute;top:0;left:0;width:auto;height:auto}
+.gold-viewport-probe{position:absolute;width:0;height:100svh;visibility:hidden;pointer-events:none}
+
+/* The open box is composited at the original base width. */
+.box-packshot {
+  position: absolute;
+  top: -34.781204%;
+  left: 0;
+  width: 91.064491%;
+  height: auto;
+  display: block;
+}

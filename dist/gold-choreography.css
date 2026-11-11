@@ -1,0 +1,92 @@
+/* Organic silhouettes between alternating sections, with no moving filters. */
+main > section + section::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: -34px 0 auto;
+  height: 35px;
+  background: var(--cream);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0 48C183 72 305 0 505 13S756 75 954 57 1214 3 1440 29V80H0Z'/%3E%3C/svg%3E") center / 100% 100%;
+  pointer-events: none;
+}
+main > section:nth-of-type(even)::before {
+  background: #503a30;
+  transform: scaleX(-1);
+}
+main > section + section { scroll-margin-top: 100px; }
+
+@media (max-width: 760px) {
+  main > section.section-pad { padding-block: 48px; }
+  .glass-panel, .statement-content { padding: 20px 18px !important; }
+  .statement .statement-content h2, .boutique-copy h2, .contact-intro h2 {
+    font-size: clamp(29px, 8.4vw, 38px);
+    line-height: 1.1;
+  }
+  .univers .section-heading { margin-bottom: 22px; }
+  .univers .universe-card { padding: 8px; }
+  .univers .card-copy { padding: 13px 12px 16px; }
+  .univers .universe-media { height: clamp(170px, 53vw, 260px); min-height: 0; }
+  .boutique-photo.liquid-glass { height: clamp(220px, 68vw, 320px); }
+  .boutique-copy address { margin-block: 12px; }
+  .contact-intro .phone { margin-top: 14px; }
+}
+
+/* Fixed choreography. Only composited transforms are animated. */
+.gold-fixed { display: block; pointer-events: none; }
+.gold-fixed img { display: block; width: 100%; height: 100%; }
+.scene-stage > .gold-fixed {
+  position: absolute;
+  inset: 43% 0 3%;
+  z-index: 1;
+  opacity: 0;
+  overflow: hidden;
+}
+.scene-stage > .gold-fixed img { object-fit: fill; }
+.gold-intro .scene-stage > .gold-fixed,
+.gold-ready .scene-stage > .gold-fixed { opacity: 1; }
+.gold-intro .scene-stage > .gold-fixed img {
+  animation: gold-arrive 1.95s cubic-bezier(.5,0,.22,1) both;
+}
+@keyframes gold-arrive {
+  from { transform: translate3d(-103%, 13%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+.gold-slot {
+  position: relative;
+  height: clamp(24px, 4vw, 46px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.gold-slot .gold-fixed {
+  position: absolute;
+  width: min(92%, 390px);
+  height: 185%;
+  top: -62%;
+  left: 0;
+  transform: scaleX(-1);
+}
+.universe-card + .universe-card .gold-fixed { transform: none; }
+.gold-slot img { object-fit: fill; }
+.gold-slot.gold-play img { animation: gold-arrive 1.55s cubic-bezier(.42,0,.2,1) both; }
+.boutique-photo .gold-slot {
+  position: absolute;
+  inset: auto 0 0;
+  height: 64px;
+}
+.boutique-photo .photo-window { bottom: 35px; }
+@media (max-width: 760px) {
+  .scene-stage > .gold-fixed { inset: 25% 0 5%; }
+  .gold-slot .gold-fixed { height: 250%; top: -108%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage > .gold-fixed { opacity: 1; }
+  .gold-intro .scene-stage > .gold-fixed img, .gold-slot.gold-play img { animation: none; }
+}
+.boutique-photo .gold-slot img {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+.gold-observed:not(.gold-play) img { visibility: hidden; }

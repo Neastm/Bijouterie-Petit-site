@@ -1,0 +1,10 @@
+#gold-river{position:fixed;inset:0;width:100%;height:100%;z-index:1;overflow:hidden;pointer-events:none}
+#gold-river canvas{display:block;width:100%;height:100%}
+.vector-gold #gold-river{position:absolute;inset:auto;top:0;left:0;overflow:visible}
+/* The photographed leather edge and the projected edge share one rear hinge. */
+.lid-face{filter:none;border-radius:5px;overflow:hidden;backface-visibility:hidden}
+.lid-inner{border-radius:5px}.lid-outer{border-width:3px;box-shadow:inset 0 0 0 1px #96242a}
+.lid-edges{shape-rendering:geometricPrecision}
+.product-body{transform-style:flat}
+
+.box-hinges{position:absolute;top:calc(var(--box-width,470px)*.235);left:0;width:100%;height:calc(var(--box-width,470px)*.014);z-index:1;pointer-events:none}.box-hinges span{position:absolute;top:0;width:5.5%;height:100%;border-radius:2px;background:linear-gradient(#211d18,#8b8070 45%,#312920 65%,#171410)}.box-hinges span:first-child{left:21%}.box-hinges span:last-child{left:71%}

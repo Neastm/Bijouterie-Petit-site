@@ -1,0 +1,34 @@
+/* Decorations are anchored to their sections and scroll natively with the page. */
+main > section > .gold-fixed,
+.scene-stage > .gold-fixed {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: min(100%, 720px);
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+.gold-fixed img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+main > section:nth-of-type(even) > .gold-fixed img {
+  transform: scaleX(-1);
+}
+.scene-stage > .gold-fixed {
+  inset: 0;
+  height: 100%;
+  transform: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.gold-ready .scene-stage > .gold-fixed { opacity: 1; }
+
+@media (max-width: 760px) {
+  main > section > .gold-fixed { height: min(100%, 650px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage > .gold-fixed { opacity: 1; transition: none; }
+}

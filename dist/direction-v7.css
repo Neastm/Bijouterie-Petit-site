@@ -1,0 +1,37 @@
+/* Already open, rising from below. The gold renderer is initialized on arrival. */
+.product-body{transform:translate3d(0,112svh,0);opacity:0;will-change:transform}
+.product-body.is-ready{opacity:1}.product-shadow{opacity:0}
+#gold-river{opacity:0;transition:opacity .35s ease}.gold-ready #gold-river{opacity:1}
+.hero-logo-glass{position:absolute;top:14svh;left:50%;transform:translateX(-50%);padding:18px 30px;z-index:4;border-radius:28px}
+.hero-logo-glass .hero-signature{position:relative;top:auto;left:auto;transform:none;width:230px;max-width:65vw;display:block}
+/* Background refraction is isolated from the content: text stays sharp. */
+.liquid-glass{isolation:isolate;border-radius:28px;border:1px solid #fff7;box-shadow:inset 0 1px 1px #fff9,inset 0 -1px 1px #d7b57d40,0 16px 42px #1e100c26}
+.liquid-glass:before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(135deg,#fffbf218,#fff8ed08 52%,#fff9e81c);backdrop-filter:blur(9px) saturate(1.25) var(--glass-refraction,);-webkit-backdrop-filter:blur(9px) saturate(1.25);pointer-events:none}
+.liquid-glass:after{content:'';position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;box-shadow:inset 1px 1px 0 #fff8,inset -1px -1px 0 #ead6b72e}
+/* Only photographs / product images are opaque in the brown sections. */
+main>section:nth-of-type(even) .liquid-glass,
+main>section:nth-of-type(even) .liquid-glass .card-copy,
+main>section:nth-of-type(even) .liquid-glass p,
+main>section:nth-of-type(even) .liquid-glass .universe-media{background:transparent!important}
+.glass-panel{position:relative;padding:38px 40px!important}
+.statement-content{max-width:1050px;margin:auto;padding:48px 55px!important}
+.statement .statement-content p{background:transparent;padding:0;text-shadow:none;max-width:590px}
+.statement .statement-content h2{text-shadow:none;font-size:clamp(40px,5.8vw,78px)}
+.univers .section-heading{width:fit-content;margin-bottom:36px;padding:25px 36px!important}
+.univers .universe-card{padding:12px;border-color:#fff5;overflow:hidden}
+.univers .universe-card:after{background:none;opacity:1}
+.univers .universe-media{border-radius:20px;overflow:hidden}
+.univers .universe-media img{opacity:1;background:#fffaf4}
+.univers .card-copy{padding:30px 24px 34px}
+.boutique-photo.liquid-glass{padding:12px;border-radius:120px 120px 28px 28px}
+.boutique-photo img{inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);border-radius:108px 108px 18px 18px;opacity:1}
+.boutique-copy address{margin-top:24px}
+.contact-intro .phone{display:inline-block;margin-top:28px}
+.contact .glass-panel{background:transparent!important}
+.contact form{box-shadow:inset 0 1px 1px #fff9,0 16px 42px #1e100c26}
+.contact .field input,.contact .field textarea{background:transparent}
+@supports not (backdrop-filter:blur(1px)){.liquid-glass:before{background:#7a6157dd}}
+@media(max-width:760px){.glass-panel{padding:28px 24px!important}.statement-content{padding:34px 23px!important}.statement .statement-content h2{font-size:37px}.univers .section-heading{padding:22px 26px!important;margin-bottom:28px}.univers .card-copy{padding:26px 16px}.hero-logo-glass{top:14svh;padding:15px 24px;border-radius:25px}.hero-logo-glass .hero-signature{width:210px}.boutique-photo.liquid-glass{border-radius:110px 110px 26px 26px}.boutique-photo img{border-radius:98px 98px 16px 16px}.liquid-glass:before{backdrop-filter:blur(7px) saturate(1.2) var(--glass-refraction,);-webkit-backdrop-filter:blur(7px) saturate(1.2)}}
+@media(prefers-reduced-motion:reduce){#gold-river{transition:none}}
+
+.boutique-photo .photo-window{position:absolute;inset:12px;border-radius:108px 108px 18px 18px;overflow:hidden}.boutique-photo .photo-window img{inset:0;width:100%;height:100%;border-radius:0}@media(max-width:760px){.boutique-photo .photo-window{border-radius:98px 98px 16px 16px}}
