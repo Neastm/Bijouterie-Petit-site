@@ -42,3 +42,18 @@ Logo from the existing Bijouterie Petit website. The PRX visual study reproduces
 
 ## Refined version
 ScrollReveal, BlurText and SpotlightCard were retrieved through the React Bits registry plugin. Their interaction patterns are adapted to vanilla DOM in dist/reactbits-adapted.js; this is not a React component import. The vitrine image is from the historic website solitaire_diamant__p353673.html. Decorative ring/clock are illustrations, not inventory photographs.
+
+
+Glass surfaces (V7): design and backdrop displacement approach adapted from David Haz / React Bits GlassSurface. Official reference: https://reactbits.dev/components/glass-surface and https://github.com/DavidHDev/react-bits/tree/main/src/content/Components/GlassSurface . Existing React Bits license notice applies. Vanilla DOM/SVG/CSS adaptation; Safari/Firefox use backdrop blur fallback.
+
+## React Bits LaserFlow
+The beam noise and advected streak motif in dist/gold-laser.js adapt David Haz / React Bits LaserFlow. Source: https://github.com/DavidHDev/react-bits/blob/main/src/content/Animations/LaserFlow/LaserFlow.jsx . The React Bits license notice above applies.
+
+
+## Counter presentation
+The timer and carousel lifecycle pattern was reviewed against React Bits Carousel
+(https://reactbits.dev/components/carousel, David Haz). hero-counter.js is a
+custom vanilla Web Animations implementation for the two presentation photographs.
+Product images and counter interior are generated illustrative assets. The frontal
+storefront is an AI reconstruction of the supplied street photograph and requires
+owner validation before representing exact architectural details.
