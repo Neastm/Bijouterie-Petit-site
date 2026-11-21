@@ -96,7 +96,8 @@
 .counter-storefront address { font-style: normal; line-height: 1.7; margin: 24px 0; }
 .counter-storefront p { margin: 24px 0; color: #f0dfcc; }
 @media (max-width: 760px) {
-  .counter-signature { top: 26%; left: 7%; width: clamp(105px,23vw,145px); }
+  .counter-signature { top: 36%; left: 7%; width: clamp(90px,22vw,115px); }
+  .counter-object { top: 65.5%; width: min(1080px,82svh,240vw); }
   .counter-storefront { min-height: 760px; padding: 300px 6% 40px; align-items: flex-end; justify-content: center; }
   .storefront-background { object-position: 40% center; }
   .counter-storefront::after { background: linear-gradient(180deg,transparent 25%,#21140b66); }

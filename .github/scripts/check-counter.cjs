@@ -60,6 +60,7 @@ async function main() {
       await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
       await page.locator('.counter-ready').waitFor();
       await settled(page, 0);
+      assert.equal(await page.locator('body').innerText().then(text=>text.includes('\uFFFD')),false,'Text encoding was damaged');
       assert.equal(await page.locator('.counter-product-name').count(), 0);
       assert.equal(await page.locator('#gold-river').count(), 0);
       for (const index of [0,1]) {
