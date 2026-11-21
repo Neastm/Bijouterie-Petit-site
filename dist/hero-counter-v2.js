@@ -1,8 +1,21 @@
-import {initReactBits} from './reactbits-adapted.js';
-import {initGlassSurfaces} from './liquid-glass.js';
+import './vendor/gsap.min.js';
+import './vendor/ScrollTrigger.min.js';
+const {gsap, ScrollTrigger} = window;
+gsap.registerPlugin(ScrollTrigger);
 
-initReactBits();
-initGlassSurfaces();
+// Each reveal runs once. Native touch and wheel scrolling remain in control.
+const motion = gsap.matchMedia();
+motion.add('(prefers-reduced-motion: no-preference)', () => {
+  document.querySelectorAll('.storefront-copy, .maison-top, .story, .section-heading, .universe-card, .atelier-intro, .service-list, .faq h2, .faq-grid, .contact-intro, #appointment-form').forEach(element => {
+    gsap.from(element, {y:28, opacity:0, duration:.8, ease:'power2.out',
+      scrollTrigger:{trigger:element, start:'top 93%', once:true}, clearProps:'transform,opacity'});
+  });
+});
+document.fonts.ready.then(() => ScrollTrigger.refresh());
+document.querySelectorAll('details').forEach(detail => detail.addEventListener('toggle', () => ScrollTrigger.refresh()));
+document.querySelectorAll('img[loading="lazy"]').forEach(image => image.addEventListener('load', () => ScrollTrigger.refresh(), {once:true}));
+window.addEventListener('pagehide', () => motion.revert(), {once:true});
+window.addEventListener('pageshow', event => { if (event.persisted) ScrollTrigger.refresh(); });
 
 const hero = document.querySelector('.counter-hero');
 const stage = document.querySelector('.counter-stage');

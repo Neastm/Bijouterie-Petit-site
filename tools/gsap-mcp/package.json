@@ -1,0 +1,1 @@
+{"name":"petit-gsap-mcp","private":true,"type":"module","scripts":{"start":"node index.ts"},"dependencies":{"@modelcontextprotocol/sdk":"1.29.0"},"engines":{"node":">=24"}}

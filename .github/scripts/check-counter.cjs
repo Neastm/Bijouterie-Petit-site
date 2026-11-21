@@ -54,7 +54,7 @@ async function main() {
   const browser = await chromium.launch({channel: 'chrome', headless: true});
   const errors = [];
   try {
-    for (const viewport of [{width:390,height:844},{width:320,height:568},{width:1440,height:900},{width:844,height:390}]) {
+    for (const viewport of [{width:390,height:844},{width:320,height:568},{width:768,height:1024},{width:1440,height:900},{width:1920,height:1080},{width:844,height:390}]) {
       const page = await browser.newPage({viewport, reducedMotion:'no-preference'});
       page.on('pageerror', error => errors.push(error.message));
       await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
@@ -100,13 +100,36 @@ async function main() {
         assert.ok(Math.abs((result.box.left+result.box.right)/2-viewport.width/2) < 6, 'Product is off center');
         assert.ok(result.overflow <= viewport.width+1, 'Horizontal page overflow');
         await page.screenshot({path:path.join(output,viewport.width+'-'+(index?'ring':'watch')+'.png')});
+        if(index===0 && [390,1440].includes(viewport.width))console.log('PETIT_CAPTURE '+viewport.width+'-hero '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
       }
       await page.evaluate(() => scrollTo({top:0,behavior:'instant'}));
       await settled(page,0);
+      assert.equal(await page.evaluate(() => window.gsap.version), '3.15.1');
+      const logo=await page.locator('.counter-signature').boundingBox();
+      assert.ok(logo.x+logo.width/2<viewport.width*.4, 'Logo should be on the left of the counter');
+      for (const selector of ['#boutique','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
+        await page.locator(selector).scrollIntoViewIfNeeded();
+        await page.waitForTimeout(950);
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1),'Section overflows at '+viewport.width+' '+selector);
+        const heading=page.locator(selector).locator('h2').first();
+        if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
+        if([390,1440].includes(viewport.width)) {
+          await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
+          if((viewport.width===390 && selector==='#boutique') || (viewport.width===1440 && selector==='#univers')) console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
+        }
+      }
+      if(viewport.width<761){
+        await page.locator('.menu-toggle').click();
+        await page.locator('.card-nav a').first().click();
+        assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'),'false');
+      }
+      await page.emulateMedia({reducedMotion:'reduce'});
+      await page.locator('#rendez-vous').scrollIntoViewIfNeeded();
+      assert.equal(await page.locator('#appointment-form').evaluate(el=>getComputedStyle(el).opacity),'1');
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');
-    console.log('Chrome verified centered products, scroll reversal, clipped sleeve continuation, no horizontal overflow and a sub-second handoff.');
+    console.log('Chrome verified six viewports, centered products, scroll reversal, all sections, left logo, GSAP, mobile navigation, reduced motion, no overflow and a sub-second handoff.');
   } finally {
     await browser.close();
     server.close();

@@ -57,10 +57,10 @@
 .counter-signature {
   position: absolute;
   z-index: 3;
-  top: max(108px,14%);
-  left: 50%;
-  width: 185px;
-  transform: translateX(-50%);
+  top: 45%;
+  left: 7%;
+  width: clamp(145px,15vw,230px);
+  transform: rotate(-2deg);
 }
 .counter-signature img { width: 100%; height: auto; display: block; }
 .counter-progress {
@@ -96,7 +96,7 @@
 .counter-storefront address { font-style: normal; line-height: 1.7; margin: 24px 0; }
 .counter-storefront p { margin: 24px 0; color: #f0dfcc; }
 @media (max-width: 760px) {
-  .counter-signature { top: max(96px,14%); width: 150px; }
+  .counter-signature { top: 26%; left: 7%; width: clamp(105px,23vw,145px); }
   .counter-storefront { min-height: 760px; padding: 300px 6% 40px; align-items: flex-end; justify-content: center; }
   .storefront-background { object-position: 40% center; }
   .counter-storefront::after { background: linear-gradient(180deg,transparent 25%,#21140b66); }
@@ -104,7 +104,7 @@
   .counter-storefront h2 { font-size: 43px; }
 }
 @media (max-height: 500px) and (min-width: 761px) {
-  .counter-signature { top: 85px; width: 125px; }
+  .counter-signature { top: 38%; left: 6%; width: 120px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .counter-hero { height: 150svh; }
