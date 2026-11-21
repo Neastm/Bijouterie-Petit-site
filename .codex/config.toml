@@ -3,5 +3,3 @@ command = 'C:\Program Files\nodejs\node.exe'
 args = ['C:\Users\natha\Documents\ChatGPT\Bijouterie Petit\site-restauration-0CwcGm\.sites-checkout\tools\gsap-mcp\index.ts']
 startup_timeout_sec = 20
 
-[mcp_servers.gsap.env]
-GSAP_MCP_SDK_URL = 'file:///C:/Users/natha/AppData/Local/npm-cache/_npx/d66c5096c7023bfb/node_modules/@modelcontextprotocol/sdk/dist/esm'
