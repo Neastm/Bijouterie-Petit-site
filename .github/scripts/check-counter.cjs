@@ -56,7 +56,7 @@ async function main() {
   try {
     for (const viewport of [{width:390,height:844},{width:320,height:568},{width:768,height:1024},{width:1440,height:900},{width:1920,height:1080},{width:844,height:390}]) {
       const page = await browser.newPage({viewport, reducedMotion:'no-preference'});
-      page.on('pageerror', error => errors.push(error.message));
+      page.on('pageerror', error => {errors.push(error.message);console.error('Browser exception:',error.stack);});
       await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
       await page.locator('.counter-ready').waitFor();
       await settled(page, 0);
