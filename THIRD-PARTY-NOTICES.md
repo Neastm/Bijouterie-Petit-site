@@ -57,3 +57,13 @@ custom vanilla Web Animations implementation for the two presentation photograph
 Product images and counter interior are generated illustrative assets. The frontal
 storefront is an AI reconstruction of the supplied street photograph and requires
 owner validation before representing exact architectural details.
+
+
+## Side presentation update
+The counter and single-hand product photographs are generated illustrative assets.
+hero-counter-v2.js changes presentations only at a scroll threshold. The withdrawal
+(340 ms), brief empty counter (60 ms) and arrival (580 ms) are real-time transitions.
+The final 24-pixel sleeve strip is composited into an SVG continuation so the arm
+reaches the viewport edge at every aspect ratio. The watch, hand and ring remain
+at their original image proportions. The interior and storefront require owner
+validation before being used as exact representations of the real shop.
