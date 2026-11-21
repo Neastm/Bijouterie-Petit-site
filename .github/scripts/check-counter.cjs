@@ -164,6 +164,24 @@ async function main() {
       await page.emulateMedia({reducedMotion:'reduce'});
       await page.locator('#rendez-vous').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#appointment-form').evaluate(el=>getComputedStyle(el).opacity),'1');
+      if(viewport.width===390){
+        await page.emulateMedia({reducedMotion:'no-preference'});
+        await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+        await settled(page,0);
+        const toRing=()=>page.evaluate(()=>{const h=document.querySelector('.counter-hero'),s=document.querySelector('.counter-stage');scrollTo({top:(h.offsetHeight-s.clientHeight)*.8,behavior:'instant'});});
+        await toRing();await page.waitForTimeout(90);
+        await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+        await settled(page,0);
+        await toRing();await page.waitForTimeout(90);
+        await page.emulateMedia({reducedMotion:'reduce'});
+        await settled(page,1);
+        await page.emulateMedia({reducedMotion:'no-preference'});
+        await settled(page,1);
+        await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+        await settled(page,0);
+        const finalFrame=await framing(page,0);
+        assert.ok(Math.abs((finalFrame.box.left+finalFrame.box.right)/2-viewport.width/2)<6,'Interrupted motion did not recover');
+      }
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');

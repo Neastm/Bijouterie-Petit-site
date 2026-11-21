@@ -39,7 +39,9 @@ function present(index, force = false) {
   if (!gsap || reduced.matches) {
     slides.forEach(slide => {
       slide.hidden = slide !== target;
-      slide.querySelector('.counter-arrival').style.transform = '';
+      const hand = slide.querySelector('.counter-arrival');
+      if (gsap) gsap.set(hand, {clearProps:'transform'});
+      else hand.style.transform = '';
     });
     finish();
     return;
