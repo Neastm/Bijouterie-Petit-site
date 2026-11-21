@@ -29,7 +29,7 @@ async function settled(page, index) {
     const slide = document.querySelectorAll('.counter-slide')[index];
     const presentation = slide.querySelector('.counter-arrival');
     const transform = new DOMMatrix(getComputedStyle(presentation).transform);
-    return !slide.hidden && presentation.getAnimations().length === 0 && Math.abs(transform.m41) < 1;
+    return !slide.hidden && document.querySelector('.counter-hero').dataset.motionState === 'idle' && Math.abs(transform.m41) < 1;
   }, index);
 }
 
@@ -55,7 +55,7 @@ async function main() {
   const errors = [];
   try {
     for (const viewport of [{width:390,height:844},{width:320,height:568},{width:768,height:1024},{width:1440,height:900},{width:1920,height:1080},{width:844,height:390}]) {
-      const page = await browser.newPage({viewport, reducedMotion:'no-preference'});
+      const page = await browser.newPage({viewport, reducedMotion:'no-preference',isMobile:viewport.width<761,hasTouch:viewport.width<761});
       page.on('pageerror', error => {errors.push(error.message);console.error('Browser exception:',error.stack);});
       await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
       await page.locator('.counter-ready').waitFor();
@@ -108,7 +108,13 @@ async function main() {
       assert.equal(await page.evaluate(() => window.gsap.version), '3.15.1');
       const logo=await page.locator('.counter-signature').boundingBox();
       assert.ok(logo.x+logo.width/2<viewport.width*.4, 'Logo should be on the left of the counter');
-      for (const selector of ['#boutique','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
+      await page.evaluate(() => {
+        const hero=document.querySelector('.counter-hero');
+        scrollTo({top:hero.offsetHeight-innerHeight*.35,behavior:'instant'});
+      });
+      await page.waitForTimeout(500);
+      assert.ok(await page.locator('.counter-parallax').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41)>viewport.width*.5,'The hand did not retreat during the section transition');
+      for (const selector of ['#boutique','#venir','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
         await page.locator(selector).scrollIntoViewIfNeeded();
         await page.waitForTimeout(950);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1),'Section overflows at '+viewport.width+' '+selector);
@@ -116,9 +122,40 @@ async function main() {
         if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
         if([390,1440].includes(viewport.width)) {
           await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
-          if((viewport.width===390 && selector==='#boutique') || (viewport.width===1440 && selector==='#univers')) console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
+          if(selector==='#venir' || (viewport.width===390 && selector==='#boutique') || (viewport.width===1440 && selector==='#univers')) console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
         }
       }
+      await page.locator('#venir').scrollIntoViewIfNeeded();
+      assert.equal(await page.locator('#local-map iframe').count(),0,'Map must not load before it is requested');
+      assert.equal(new URL(await page.locator('#route-link').getAttribute('href')).searchParams.get('travelmode'),'walking');
+      await page.locator('input[name="travel-mode"][value="driving"]').check();
+      const routeUrl=new URL(await page.locator('#route-link').getAttribute('href'));
+      assert.equal(routeUrl.searchParams.get('travelmode'),'driving');
+      assert.ok(routeUrl.searchParams.get('destination').includes('18 rue Saint-Vincent'));
+      await page.context().grantPermissions(['clipboard-read','clipboard-write']);
+      await page.locator('#copy-address').click();
+      await page.waitForFunction(()=>document.querySelector('#address-status').textContent==='Adresse copiée.');
+      assert.ok(await page.evaluate(()=>navigator.clipboard.readText()).then(text=>text.includes('30100')));
+      await page.route('https://maps.google.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>Map frame test</title>'}));
+      await page.locator('#show-map').click();
+      assert.equal(await page.locator('#local-map iframe').count(),1);
+      assert.equal(await page.locator('#show-map').getAttribute('aria-expanded'),'true');
+      await page.locator('#show-map').click();
+      assert.equal(await page.locator('#show-map').getAttribute('aria-expanded'),'false');
+      await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+      await settled(page,0);
+      if(viewport.width<761){
+        const cdp=await page.context().newCDPSession(page);
+        const x=viewport.width*.75,y=viewport.height*.7;
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+        for(let i=1;i<=6;i++){
+          await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-i*20}]});
+          await page.waitForTimeout(25);
+        }
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      }else await page.mouse.wheel(0,140);
+      await page.waitForTimeout(250);
+      assert.ok(await page.evaluate(()=>scrollY)>20,'Native scrolling was blocked');
       if(viewport.width<761){
         await page.locator('.menu-toggle').click();
         await page.locator('.card-nav a').first().click();
@@ -130,7 +167,7 @@ async function main() {
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');
-    console.log('Chrome verified six viewports, centered products, scroll reversal, all sections, left logo, GSAP, mobile navigation, reduced motion, no overflow and a sub-second handoff.');
+    console.log('Chrome verified six viewports, GSAP handoff and exit, native touch/wheel scrolling, directions, clipboard, lazy map, menu, reduced motion and no overflow.');
   } finally {
     await browser.close();
     server.close();
