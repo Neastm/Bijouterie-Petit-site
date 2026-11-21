@@ -1,5 +1,16 @@
-import './vendor/gsap.min.js';
-import './vendor/ScrollTrigger.min.js';
+// Official distribution files are UMD scripts; execute them as classic scripts,
+// not strict ES modules (window.window is read-only in browsers).
+async function loadMotionScript(name) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = new URL('./vendor/' + name + '.min.js', import.meta.url).href;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Unable to load '+name));
+    document.head.append(script);
+  });
+}
+await loadMotionScript('gsap');
+await loadMotionScript('ScrollTrigger');
 const {gsap, ScrollTrigger} = window;
 gsap.registerPlugin(ScrollTrigger);
 
