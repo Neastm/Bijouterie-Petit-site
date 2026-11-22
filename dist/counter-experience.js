@@ -96,27 +96,34 @@ function initMotion() {
     // Separate wrappers isolate the room, the photograph and the exit motion.
     gsap.to('.counter-parallax', {y:() => -stage.clientHeight*.045, ease:'none',
       scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.18,invalidateOnRefresh:true}});
-    gsap.to('.counter-paper-parallax', {y:() => -stage.clientHeight*.022,ease:'none',
-      scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.22,invalidateOnRefresh:true}});
     const exit = gsap.timeline({scrollTrigger:{trigger:hero,start:'bottom bottom',end:'bottom 12%',scrub:.25,invalidateOnRefresh:true}});
     exit.to('.counter-parallax', {x:() => innerWidth*.86, duration:.62, ease:'power1.in'}, 0)
       .to('.counter-room', {yPercent:-5,scale:1.12,duration:1,ease:'none'},0)
-      .to('.counter-stationery, .counter-progress', {autoAlpha:0,y:-28,duration:.5},.05);
+      .to('.counter-progress', {autoAlpha:0,duration:.5},.05);
     const boutique = document.querySelector('#boutique');
     gsap.fromTo('.storefront-background', {yPercent:-9,scale:1.21}, {yPercent:3,scale:1.09,ease:'none',
       scrollTrigger:{trigger:boutique,start:'top bottom',end:'top top',scrub:.3}});
-    document.querySelectorAll('.storefront-copy, .maison-top, .story, .section-heading, .universe-card, .atelier-intro, .service-list, .faq h2, .faq-grid, .contact-intro, #appointment-form').forEach(element => {
+    document.querySelectorAll('.storefront-copy, .section-heading, .atelier-intro, .service-list, .faq h2, .faq-grid, .contact-intro, #appointment-form').forEach(element => {
       gsap.from(element, {y:28, opacity:0, duration:.8, ease:'power2.out',
         scrollTrigger:{trigger:element,start:'top 92%',once:true},clearProps:'transform,opacity'});
     });
-    const route = document.querySelector('.address-orbit');
-    const length = route.getTotalLength();
-    const address = gsap.timeline({scrollTrigger:{trigger:'#venir',start:'top 83%',once:true}});
-    address.from('.arrival-copy', {y:24,opacity:0,duration:.65,ease:'power2.out'})
-      .from('.address-card', {y:35,rotation:3,opacity:0,duration:.8,ease:'power3.out'},.1)
-      .fromTo(route,{strokeDasharray:length,strokeDashoffset:length},{strokeDashoffset:0,duration:1.1,ease:'power2.inOut'},.25)
-      .from('.address-pin',{scale:.65,opacity:0,transformOrigin:'50% 100%',duration:.5,ease:'back.out(1.3)'},.85);
-    return () => { gsap.set('.address-orbit',{clearProps:'strokeDasharray,strokeDashoffset'}); };
+    const address = gsap.timeline({scrollTrigger:{trigger:'#venir',start:'top 82%',once:true}});
+    address.from('.arrival-copy',{y:24,opacity:0,duration:.65,ease:'power2.out'})
+      .from('.map-art',{scale:1.12,opacity:0,duration:1,ease:'power2.out'},.05)
+      .from('.map-photo-marker',{scale:2.5,y:-65,opacity:0,duration:1.1,ease:'power3.out'},.16)
+      .from('.map-place-label',{y:8,opacity:0,duration:.5},.75);
+    const family=gsap.timeline({scrollTrigger:{trigger:'#maison',start:'top 83%',once:true}});
+    family.from('.family-visual',{y:30,opacity:0,duration:.85,ease:'power2.out'})
+      .from('.family-copy h2, .family-copy>p, .family-copy>.underlined',{y:20,opacity:0,duration:.65,stagger:.12,ease:'power2.out'},.16)
+      .from('.lineage-progress',{scaleX:0,duration:1.1,ease:'power2.inOut'},.5)
+      .from('.family-lineage li',{y:12,opacity:0,duration:.5,stagger:.18},.65);
+    gsap.fromTo('.family-image-inner',{yPercent:-2,scale:1.08},{yPercent:2,scale:1.08,ease:'none',scrollTrigger:{trigger:'#maison',start:'top bottom',end:'bottom top',scrub:.35}});
+    document.querySelectorAll('.collection-scene').forEach((scene,index)=>{
+      const reveal=gsap.timeline({scrollTrigger:{trigger:scene,start:'top 86%',once:true}});
+      reveal.from(scene.querySelector('.collection-visual'),{y:30,opacity:0,duration:.8,ease:'power2.out'})
+        .from(scene.querySelector('.collection-copy'),{x:index?-22:22,y:14,opacity:0,duration:.75,ease:'power2.out'},.18);
+      gsap.fromTo(scene.querySelector('.collection-photo'),{yPercent:-2,scale:1.055},{yPercent:2,scale:1.055,ease:'none',scrollTrigger:{trigger:scene,start:'top bottom',end:'bottom top',scrub:.3}});
+    });
   });
   document.fonts.ready.then(refresh);
   document.querySelectorAll('details').forEach(detail => detail.addEventListener('toggle', refresh));
@@ -157,7 +164,7 @@ mapToggle.addEventListener('click', () => {
   }
   mapPanel.hidden = !show;
   mapToggle.setAttribute('aria-expanded',String(show));
-  mapToggle.textContent = show ? 'Fermer la carte' : 'Voir le quartier';
+  mapToggle.textContent = show ? 'Fermer la carte' : 'Explorer la carte';
   if (show && gsap && !reduced.matches) gsap.fromTo(mapPanel,{opacity:0},{opacity:1,duration:.3});
 });
 const findUs = document.querySelector('.storefront-copy .button');

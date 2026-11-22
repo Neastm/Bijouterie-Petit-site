@@ -51,6 +51,9 @@ async function framing(page, index) {
 
 async function main() {
   await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
+  const geography=JSON.parse(fs.readFileSync(path.join(root,'assets/ales-neighbourhood.json'),'utf8'));
+  assert.ok(geography.score>=.65 && geography.ways>20 && geography.nodes>30,'Unverified map source');
+  assert.ok(Math.abs(geography.point.x-50)<.1 && Math.abs(geography.point.y-50)<.1,'The photo marker does not match the geocoded point');
   const browser = await chromium.launch({channel: 'chrome', headless: true});
   const errors = [];
   try {
@@ -63,6 +66,7 @@ async function main() {
       assert.equal(await page.locator('body').innerText().then(text=>text.includes('\uFFFD')),false,'Text encoding was damaged');
       assert.equal(await page.locator('.counter-product-name').count(), 0);
       assert.equal(await page.locator('#gold-river').count(), 0);
+      let paperPosition;
       for (const index of [0,1]) {
         if (index === 1) {
           await page.evaluate(() => {
@@ -111,6 +115,11 @@ async function main() {
           console.log('Empty interval at '+viewport.width+'px: '+Math.round(blank)+' ms');
         }
         const result = await framing(page, index);
+        const paperNow=await page.locator('.counter-brochure').boundingBox();
+        if(index===0)paperPosition=paperNow;
+        else assert.ok(Math.abs(paperNow.x-paperPosition.x)<1 && Math.abs(paperNow.y-paperPosition.y)<1,'The brochure drifted relative to the counter');
+        assert.equal(await page.locator('.counter-room .counter-stationery').count(),1,'The paper is not attached to the room');
+        assert.equal(await page.locator('.counter-paper-parallax').evaluate(el=>getComputedStyle(el).transform),'none');
         assert.ok(result.box.left >= -1 && result.box.right <= viewport.width+1, JSON.stringify(result));
         assert.ok(result.box.top >= result.stage.top && result.box.bottom <= result.stage.bottom+1, JSON.stringify(result));
         const expectedCenter=viewport.width*(viewport.width>760?.805:.5);
@@ -121,7 +130,6 @@ async function main() {
         }
         assert.ok(result.overflow <= viewport.width+1, 'Horizontal page overflow');
         await page.screenshot({path:path.join(output,viewport.width+'-'+(index?'ring':'watch')+'.png')});
-        if([390,1440].includes(viewport.width))console.log('PETIT_CAPTURE '+viewport.width+'-hero-'+index+' '+(await page.screenshot({type:'jpeg',quality:40})).toString('base64'));
       }
       await page.evaluate(() => scrollTo({top:0,behavior:'instant'}));
       await settled(page,0);
@@ -155,17 +163,25 @@ async function main() {
       assert.ok(await page.locator('.counter-parallax').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41)>viewport.width*.5,'The hand did not retreat during the section transition');
       for (const selector of ['#boutique','#venir','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
         await page.locator(selector).scrollIntoViewIfNeeded();
-        await page.waitForTimeout(950);
+        await page.waitForTimeout(['#maison','#venir'].includes(selector)?1700:950);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1),'Section overflows at '+viewport.width+' '+selector);
         const heading=page.locator(selector).locator('h2').first();
         if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
         if([390,1440].includes(viewport.width)) {
           await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
-          if(selector==='#boutique')console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
+          if(['#venir','#maison'].includes(selector))console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.locator(selector).screenshot({type:'jpeg',quality:38})).toString('base64'));
+          if(selector==='#univers'){
+            await page.locator('#bijoux').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
+            await page.locator('#montres').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
+            console.log('PETIT_CAPTURE '+viewport.width+'-univers '+(await page.locator('#univers').screenshot({type:'jpeg',quality:35})).toString('base64'));
+          }
         }
       }
       assert.equal(await page.locator('.storefront-actions .button-brown').getAttribute('href'),'#rendez-vous');
       assert.equal(await page.locator('.counter-sleeve').count(),0,'Repeated sleeve extension is still present');
+      assert.equal(await page.locator('.family-lineage li').count(),3);
+      assert.equal(await page.locator('.collection-scene').count(),2);
+      assert.ok(await page.locator('.map-art img').evaluate(el=>el.complete&&el.naturalWidth>0),'The geographic map failed to load');
       await page.locator('#venir').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#local-map iframe').count(),0,'Map must not load before it is requested');
       assert.equal(new URL(await page.locator('#route-link').getAttribute('href')).searchParams.get('travelmode'),'walking');
@@ -226,7 +242,7 @@ async function main() {
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');
-    console.log('Chrome verified brochures and three navigation links, responsive product placement, fully offscreen retirement and a real pause, CTA, native scrolling, map, clipboard, interruptions and reduced motion in six viewports.');
+    console.log('Chrome verified anchored brochures without parallax, real geocoded OSM map, family and collections, product handoff, navigation, native scroll, itinerary and reduced motion in six viewports.');
   } finally {
     await browser.close();
     server.close();

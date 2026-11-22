@@ -36,6 +36,8 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install the browser test dependency
         run: npm install --prefix "$RUNNER_TEMP/petit-ui" --no-audit --no-fund playwright@1.56.1
+      - name: Prepare the real neighbourhood map
+        run: node tools/build-neighbourhood-map.cjs
       - name: Verify mobile and desktop counter presentations
         env:
           PETIT_TEST_TOOLS: ${{ runner.temp }}/petit-ui
