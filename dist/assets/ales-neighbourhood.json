@@ -1,0 +1,23 @@
+{
+  "label": "18 Rue Saint Vincent 30100 Alès",
+  "lon": 4.078672,
+  "lat": 44.123702,
+  "score": 0.9680581818181818,
+  "point": {
+    "x": 50,
+    "y": 50.001565786643276
+  },
+  "bbox": [
+    4.072272,
+    44.120002,
+    4.085072,
+    44.127402000000004
+  ],
+  "sources": {
+    "address": "https://data.geopf.fr/geocodage/search",
+    "map": "https://www.openstreetmap.org/copyright"
+  },
+  "attribution": "© OpenStreetMap contributors — ODbL",
+  "ways": 2335,
+  "nodes": 14774
+}

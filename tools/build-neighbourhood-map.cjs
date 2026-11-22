@@ -30,7 +30,8 @@ async function main(){
  const point=p=>project(p).map(v=>v.toFixed(1)).join(',');
  const ways=[];
  for(const m of xml.matchAll(/<way\b([^>]*)>([^]*?)<\/way>/g)){
-  const pts=[...m[2].matchAll(/<nd\s+ref="(\d+)"\s*\/>/g)].map(n=>nodes.get(n[1])).filter(Boolean);
+  const pts=[...m[2].matchAll(/<nd\s+ref="(\d+)"\s*\/>/g)].map(n=>nodes.get(n[1]));
+  if(pts.some(p=>!p))throw Error('Incomplete OSM way geometry: '+attr(m[1],'id'));
   if(pts.length>1)ways.push({id:attr(m[1],'id'),tags:tags(m[2]),pts});
  }
  const base=[],roads=[],highlights=[],labels=[],seen=new Set();
