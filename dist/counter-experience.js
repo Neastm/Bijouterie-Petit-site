@@ -122,7 +122,9 @@ function initMotion() {
       const reveal=gsap.timeline({scrollTrigger:{trigger:scene,start:'top 86%',once:true}});
       reveal.from(scene.querySelector('.collection-visual'),{y:30,opacity:0,duration:.8,ease:'power2.out'})
         .from(scene.querySelector('.collection-copy'),{x:index?-22:22,y:14,opacity:0,duration:.75,ease:'power2.out'},.18);
-      gsap.fromTo(scene.querySelector('.collection-photo'),{yPercent:-2,scale:1.055},{yPercent:2,scale:1.055,ease:'none',scrollTrigger:{trigger:scene,start:'top bottom',end:'bottom top',scrub:.3}});
+      const from=index?{yPercent:0,scale:.99}:{yPercent:-2,scale:1.055};
+      const to=index?{yPercent:0,scale:1}:{yPercent:2,scale:1.055};
+      gsap.fromTo(scene.querySelector('.collection-photo'),from,{...to,ease:'none',scrollTrigger:{trigger:scene,start:'top bottom',end:'bottom top',scrub:.3}});
     });
   });
   document.fonts.ready.then(refresh);

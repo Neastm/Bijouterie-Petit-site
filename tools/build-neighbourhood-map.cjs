@@ -18,7 +18,9 @@ async function main(){
  const bbox=[lon-.0064,lat-.0037,lon+.0064,lat+.0037];
  const xml=await first(['https://api.openstreetmap.org/api/0.6/map?bbox='+bbox.join(','),'https://www.openstreetmap.org/api/0.6/map?bbox='+bbox.join(',')]);
  const nodes=new Map();
- for(const m of xml.matchAll(/<node\b([^>]*)(?:\/>|>[^]*?<\/node>)/g)){const a=m[1];nodes.set(attr(a,'id'),[+attr(a,'lon'),+attr(a,'lat')]);}
+ // Read every opening node tag; consuming closing tags can swallow subsequent
+ // self-closing nodes and corrupt the real street and building geometry.
+ for(const m of xml.matchAll(/<node\b([^>]*)>/g)){const a=m[1];nodes.set(attr(a,'id'),[+attr(a,'lon'),+attr(a,'lat')]);}
  if(nodes.size<30)throw Error('Insufficient OSM geometry');
  const merc=([x,y])=>[x*Math.PI/180,Math.log(Math.tan(Math.PI/4+y*Math.PI/360))];
  const lo=merc([bbox[0],bbox[1]]),hi=merc([bbox[2],bbox[3]]),w=1200,h=950;

@@ -169,11 +169,11 @@ async function main() {
         if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
         if([390,1440].includes(viewport.width)) {
           await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
-          if(['#venir','#maison'].includes(selector))console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.locator(selector).screenshot({type:'jpeg',quality:38})).toString('base64'));
+          if(['#venir','#maison'].includes(selector))console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.locator(selector).screenshot({type:'jpeg',quality:38,style:'.site-header,.skip-link{visibility:hidden!important}'})).toString('base64'));
           if(selector==='#univers'){
             await page.locator('#bijoux').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
             await page.locator('#montres').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
-            console.log('PETIT_CAPTURE '+viewport.width+'-univers '+(await page.locator('#univers').screenshot({type:'jpeg',quality:35})).toString('base64'));
+            console.log('PETIT_CAPTURE '+viewport.width+'-univers '+(await page.locator('#univers').screenshot({type:'jpeg',quality:35,style:'.site-header,.skip-link{visibility:hidden!important}'})).toString('base64'));
           }
         }
       }
