@@ -66,7 +66,19 @@ async function main() {
       for (const index of [0,1]) {
         if (index === 1) {
           await page.evaluate(() => {
-            window.petitBlank = {max:0,since:0,run:true};
+            window.petitBlank = {max:0,since:0,run:true,retirements:[]};
+            const hidden=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'hidden');
+            document.querySelectorAll('.counter-slide').forEach(slide=>Object.defineProperty(slide,'hidden',{
+              configurable:true,
+              get(){return hidden.get.call(this);},
+              set(value){
+                if(value===true && !hidden.get.call(this)){
+                  const rect=this.querySelector('.counter-arrival').getBoundingClientRect();
+                  if(rect.width)window.petitBlank.retirements.push(rect.left);
+                }
+                hidden.set.call(this,value);
+              }
+            }));
             function sample(now) {
               const state = window.petitBlank;
               const visible = [...document.querySelectorAll('.counter-slide')].some((slide, index) => {
@@ -93,21 +105,48 @@ async function main() {
             return window.petitBlank.max;
           });
           assert.ok(blank < 1000, 'Empty counter exceeded one second');
+          assert.ok(blank >= 140,'The handoff did not leave a visible pause');
+          const retirements=await page.evaluate(()=>window.petitBlank.retirements);
+          assert.ok(retirements.length>0 && retirements.every(left=>left>=viewport.width), 'A photograph was hidden before clearing the frame');
           console.log('Empty interval at '+viewport.width+'px: '+Math.round(blank)+' ms');
         }
         const result = await framing(page, index);
         assert.ok(result.box.left >= -1 && result.box.right <= viewport.width+1, JSON.stringify(result));
         assert.ok(result.box.top >= result.stage.top && result.box.bottom <= result.stage.bottom+1, JSON.stringify(result));
-        assert.ok(Math.abs((result.box.left+result.box.right)/2-viewport.width/2) < 6, 'Product is off center');
+        const expectedCenter=viewport.width*(viewport.width>760?.805:.5);
+        assert.ok(Math.abs((result.box.left+result.box.right)/2-expectedCenter) < 6, 'Product is misplaced');
+        if(index===0 && viewport.width<761){
+          const links=await page.locator('.brochure-links a').all();
+          for(const link of links){const rect=await link.boundingBox();assert.ok(rect.y+rect.height/2<result.box.top+3,'The mobile brochure link is behind the watch');}
+        }
         assert.ok(result.overflow <= viewport.width+1, 'Horizontal page overflow');
         await page.screenshot({path:path.join(output,viewport.width+'-'+(index?'ring':'watch')+'.png')});
-        if(index===0 && [390,1440].includes(viewport.width))console.log('PETIT_CAPTURE '+viewport.width+'-hero '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
+        if([390,1440].includes(viewport.width))console.log('PETIT_CAPTURE '+viewport.width+'-hero-'+index+' '+(await page.screenshot({type:'jpeg',quality:40})).toString('base64'));
       }
       await page.evaluate(() => scrollTo({top:0,behavior:'instant'}));
       await settled(page,0);
       assert.equal(await page.evaluate(() => window.gsap.version), '3.15.1');
-      const logo=await page.locator('.counter-signature').boundingBox();
-      assert.ok(logo.x+logo.width/2<viewport.width*.4, 'Logo should be on the left of the counter');
+      if(viewport.width<761)assert.equal(await page.locator('.counter-signature').isVisible(),false,'No counter logo on mobile');
+      else{
+        const logo=await page.locator('.counter-signature').boundingBox();
+        assert.ok(logo.x+logo.width/2<viewport.width*.3,'The logo brochure should stay on the left');
+        const paper=await page.locator('.counter-brochure').boundingBox();
+        assert.ok(paper.x>logo.x+logo.width,'The two brochures overlap');
+      }
+      for(const anchor of await page.locator('.brochure-links a').all()){
+        const id=await anchor.getAttribute('href');
+        assert.equal(await page.locator(id).count(),1,'Missing brochure destination '+id);
+      }
+      if([390,1440].includes(viewport.width)){
+        for(const id of ['#bijoux','#montres','#atelier']){
+          await page.locator('.brochure-links a[href="'+id+'"]').click();
+          await page.waitForFunction(id=>location.hash===id,id);
+          await page.waitForTimeout(700);
+          assert.ok(await page.evaluate(()=>scrollY)>viewport.height,'Brochure navigation did not scroll');
+          await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+          await settled(page,0);
+        }
+      }
       await page.evaluate(() => {
         const hero=document.querySelector('.counter-hero');
         scrollTo({top:hero.offsetHeight-innerHeight*.35,behavior:'instant'});
@@ -122,9 +161,11 @@ async function main() {
         if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
         if([390,1440].includes(viewport.width)) {
           await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
-          if(selector==='#venir' || (viewport.width===390 && selector==='#boutique') || (viewport.width===1440 && selector==='#univers')) console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
+          if(selector==='#boutique')console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.screenshot({type:'jpeg',quality:35})).toString('base64'));
         }
       }
+      assert.equal(await page.locator('.storefront-actions .button-brown').getAttribute('href'),'#rendez-vous');
+      assert.equal(await page.locator('.counter-sleeve').count(),0,'Repeated sleeve extension is still present');
       await page.locator('#venir').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#local-map iframe').count(),0,'Map must not load before it is requested');
       assert.equal(new URL(await page.locator('#route-link').getAttribute('href')).searchParams.get('travelmode'),'walking');
@@ -185,7 +226,7 @@ async function main() {
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');
-    console.log('Chrome verified six viewports, GSAP handoff and exit, native touch/wheel scrolling, directions, clipboard, lazy map, menu, reduced motion and no overflow.');
+    console.log('Chrome verified brochures and three navigation links, responsive product placement, fully offscreen retirement and a real pause, CTA, native scrolling, map, clipboard, interruptions and reduced motion in six viewports.');
   } finally {
     await browser.close();
     server.close();

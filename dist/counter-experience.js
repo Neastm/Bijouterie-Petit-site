@@ -47,24 +47,36 @@ function present(index, force = false) {
     return;
   }
   const arrival = target.querySelector('.counter-arrival');
-  const outside = stage.clientWidth / 2 + target.querySelector('.counter-object').clientWidth;
-  presentation = gsap.timeline({onComplete:finish, defaults:{overwrite:'auto'}});
+  const edge = stage.getBoundingClientRect().right + 32;
+  const planeX = Number(gsap.getProperty(document.querySelector('.counter-parallax'),'x')) || 0;
+  // Measure the entire real photograph. Hide it only once its LEFT edge has
+  // cleared the viewport, including the glove, sleeve and contact shadow.
+  let enterX = 0;
+  if (outgoing !== target) {
+    target.hidden = false;
+    gsap.set(arrival, {x:0,y:-3,autoAlpha:0});
+    enterX = Math.max(0,edge-(arrival.getBoundingClientRect().left-planeX));
+    gsap.set(arrival, {x:enterX,autoAlpha:1});
+    target.hidden = true;
+  }
+  presentation = gsap.timeline({paused:true,onComplete:finish,defaults:{overwrite:'auto'}});
   let enterAt = 0;
   if (outgoing && outgoing !== target) {
     const hand = outgoing.querySelector('.counter-arrival');
-    presentation.to(hand, {x:outside, y:-3, duration:.36, ease:'power2.in'});
-    presentation.call(() => {outgoing.hidden = true;});
-    enterAt = .40;
+    const leaveX = Number(gsap.getProperty(hand,'x')) + Math.max(0,edge-(hand.getBoundingClientRect().left-planeX));
+    presentation.to(hand, {x:leaveX,y:-3,duration:.48,ease:'power2.in'},0);
+    presentation.call(() => {outgoing.hidden = true;},null,.48);
+    // A real-time pause, independent of scroll speed, separates the two gestures.
+    enterAt = .68;
   }
   if (outgoing !== target) {
-    presentation.set(arrival, {x:outside, y:-5}, enterAt);
     presentation.call(() => {target.hidden = false;}, null, enterAt);
   }
   // The entire photograph moves together: no rotation, stretching or floating box.
-  presentation.to(arrival, {x:0, y:0, duration:.64, ease:'power3.out'}, enterAt);
+  presentation.to(arrival, {x:0,y:0,duration:.70,ease:'power3.out'},enterAt);
   presentation.fromTo(target.querySelector('.counter-contact-shadow'),
     {opacity:.25, scaleX:.94}, {opacity:1, scaleX:1, duration:.45, ease:'sine.out'}, enterAt+.16);
-  if (document.hidden) presentation.pause();
+  if (!document.hidden) presentation.play();
 }
 
 function refresh() { ScrollTrigger?.refresh(); }
@@ -82,14 +94,16 @@ function initMotion() {
   media = gsap.matchMedia();
   media.add('(prefers-reduced-motion: no-preference)', () => {
     // Separate wrappers isolate the room, the photograph and the exit motion.
-    gsap.to('.counter-parallax', {y:() => -stage.clientHeight*.018, ease:'none',
+    gsap.to('.counter-parallax', {y:() => -stage.clientHeight*.045, ease:'none',
       scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.18,invalidateOnRefresh:true}});
+    gsap.to('.counter-paper-parallax', {y:() => -stage.clientHeight*.022,ease:'none',
+      scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.22,invalidateOnRefresh:true}});
     const exit = gsap.timeline({scrollTrigger:{trigger:hero,start:'bottom bottom',end:'bottom 12%',scrub:.25,invalidateOnRefresh:true}});
     exit.to('.counter-parallax', {x:() => innerWidth*.86, duration:.62, ease:'power1.in'}, 0)
-      .to('.counter-room', {yPercent:-3, scale:1.035, duration:1, ease:'none'}, 0)
-      .to('.counter-signature, .counter-progress', {autoAlpha:0, y:-14, duration:.4}, .05);
+      .to('.counter-room', {yPercent:-5,scale:1.12,duration:1,ease:'none'},0)
+      .to('.counter-stationery, .counter-progress', {autoAlpha:0,y:-28,duration:.5},.05);
     const boutique = document.querySelector('#boutique');
-    gsap.fromTo('.storefront-background', {yPercent:-4, scale:1.08}, {yPercent:0,scale:1,ease:'none',
+    gsap.fromTo('.storefront-background', {yPercent:-9,scale:1.21}, {yPercent:3,scale:1.09,ease:'none',
       scrollTrigger:{trigger:boutique,start:'top bottom',end:'top top',scrub:.3}});
     document.querySelectorAll('.storefront-copy, .maison-top, .story, .section-heading, .universe-card, .atelier-intro, .service-list, .faq h2, .faq-grid, .contact-intro, #appointment-form').forEach(element => {
       gsap.from(element, {y:28, opacity:0, duration:.8, ease:'power2.out',
@@ -164,6 +178,12 @@ nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => c
 document.addEventListener('pointerdown', event => {if(!header.contains(event.target))closeMenu();});
 document.addEventListener('keydown', event => {if(event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true')closeMenu(true);});
 mobile.addEventListener('change', () => closeMenu());
+let lastWidth = innerWidth, resizeTimer;
+window.addEventListener('resize', () => {
+  if (innerWidth === lastWidth) return;
+  lastWidth = innerWidth;clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {if(ready)present(wanted,true);refresh();},140);
+},{passive:true});
 document.querySelector('#appointment-form').addEventListener('submit', event => {
   event.preventDefault();document.querySelector('#form-status').textContent = 'Pour convenir de votre rendez-vous, appelez le 04 66 52 10 00.';
 });
