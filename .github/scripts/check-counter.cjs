@@ -233,6 +233,14 @@ async function main() {
       assert.equal(await page.locator('.counter-sleeve').count(),0,'Repeated sleeve extension is still present');
       assert.equal(await page.locator('.family-lineage li').count(),3);
       assert.equal(await page.locator('.collection-scene').count(),2);
+      for(const scene of await page.locator('.collection-scene').all()){
+        const bounds=await scene.evaluate(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.collection-copy').getBoundingClientRect(),c=el.querySelector('.collection-visual').getBoundingClientRect();return {inside:b.left>=a.left&&b.right<=a.right&&b.top>=a.top&&b.bottom<=a.bottom,image:c.width/a.width};});
+        assert.ok(bounds.inside && bounds.image>.95,'The compact glass panel or full image is misplaced');
+      }
+      if(viewport.width<761){
+        assert.equal(await page.locator('.family-copy h2').evaluate(el=>getComputedStyle(el).transform),'none','Mobile text should not move during native scrolling');
+        assert.ok(await page.locator('.counter-hero').evaluate(el=>el.offsetHeight/innerHeight)>=3,'The ring has no extra viewing space');
+      }
       const brands=page.locator('.logoloop__list:not([aria-hidden]) img');
       assert.equal(await brands.count(),5,'The brand list is incomplete');
       const logoStates=await brands.evaluateAll(images=>images.map(image=>({brand:image.alt,loaded:image.complete&&image.naturalWidth>0})));

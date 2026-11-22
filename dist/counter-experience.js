@@ -64,16 +64,16 @@ function present(index, force = false) {
   if (outgoing && outgoing !== target) {
     const hand = outgoing.querySelector('.counter-arrival');
     const leaveX = Number(gsap.getProperty(hand,'x')) + Math.max(0,edge-(hand.getBoundingClientRect().left-planeX));
-    presentation.to(hand, {x:leaveX,y:-3,duration:.48,ease:'power2.in'},0);
-    presentation.call(() => {outgoing.hidden = true;},null,.48);
+    presentation.to(hand, {x:leaveX,y:-3,duration:.65,ease:'power2.inOut'},0);
+    presentation.call(() => {outgoing.hidden = true;},null,.65);
     // A real-time pause, independent of scroll speed, separates the two gestures.
-    enterAt = .68;
+    enterAt = .85;
   }
   if (outgoing !== target) {
     presentation.call(() => {target.hidden = false;}, null, enterAt);
   }
   // The entire photograph moves together: no rotation, stretching or floating box.
-  presentation.to(arrival, {x:0,y:0,duration:.70,ease:'power3.out'},enterAt);
+  presentation.to(arrival, {x:0,y:0,duration:.85,ease:'power2.inOut',force3D:true},enterAt);
   presentation.fromTo(target.querySelector('.counter-contact-shadow'),
     {opacity:.25, scaleX:.94}, {opacity:1, scaleX:1, duration:.45, ease:'sine.out'}, enterAt+.16);
   if (!document.hidden) presentation.play();
@@ -87,12 +87,14 @@ function initMotion() {
     trigger:hero, start:'top top', end:'bottom bottom',
     onUpdate:self => {
       gsap.set('.counter-progress-fill', {scaleX:self.progress});
-      present(self.progress >= .48 ? 1 : 0);
+      present(self.progress >= .42 ? 1 : 0);
       if (self.progress > .005) showHeader();
     }
   });
   media = gsap.matchMedia();
-  media.add('(prefers-reduced-motion: no-preference)', () => {
+  // Touch scrolling stays compositor-driven: no text reveals, scrubbed photos
+  // or transformed backdrop-filter panels on phones (particularly iOS Safari).
+  media.add('(min-width: 761px) and (prefers-reduced-motion: no-preference)', () => {
     // The final ring stays on the counter while the hero scrolls out naturally.
     gsap.to('.counter-parallax', {y:() => -stage.clientHeight*.045, ease:'none',
       scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.18,invalidateOnRefresh:true}});
@@ -120,7 +122,7 @@ function initMotion() {
     document.querySelectorAll('.collection-scene').forEach((scene,index)=>{
       const reveal=gsap.timeline({scrollTrigger:{trigger:scene,start:'top 86%',once:true}});
       reveal.from(scene.querySelector('.collection-visual'),{y:30,opacity:0,duration:.8,ease:'power2.out'})
-        .from(scene.querySelector('.collection-copy'),{x:index?-22:22,y:14,opacity:0,duration:.75,ease:'power2.out'},.18);
+        .from(scene.querySelector('.collection-copy'),{opacity:0,duration:.65,ease:'power2.out'},.18);
       const from=index?{yPercent:0,scale:.99}:{yPercent:-2,scale:1.055};
       const to=index?{yPercent:0,scale:1}:{yPercent:2,scale:1.055};
       gsap.fromTo(scene.querySelector('.collection-photo'),from,{...to,ease:'none',scrollTrigger:{trigger:scene,start:'top bottom',end:'bottom top',scrub:.3}});
@@ -217,7 +219,7 @@ const images = slides.map(slide => slide.querySelector('img'));
 images[1].decode().then(() => {if(ready && wanted === 1)present(1);}).catch(()=>{});
 Promise.allSettled([images[0].decode(), document.querySelector('.counter-background').decode()]).then(() => {
   ready = true;hero.classList.add('counter-ready');refresh();
-  present(heroTrigger?.progress >= .48 ? 1 : 0);showHeader();
+  present(heroTrigger?.progress >= .42 ? 1 : 0);showHeader();
 });
 window.addEventListener('scroll', showHeader, {passive:true,once:true});
 document.addEventListener('visibilitychange', () => {if(document.hidden)presentation?.pause();else presentation?.resume();});
