@@ -74,6 +74,12 @@ async function verifySmoothScroll(page, viewport) {
     assert.ok(values.every((value,index)=>index===0 || value>=values[index-1]-1),'Scroll jumped backwards');
     assert.equal(await page.evaluate(()=>document.documentElement.dataset.scrollRunning),undefined,'Smoothing continues rendering after idle');
   }
+  const beforeReverse=await page.evaluate(()=>scrollY);
+  await page.mouse.wheel(0,420);
+  await page.waitForTimeout(80);
+  await page.mouse.wheel(0,-420);
+  await page.waitForTimeout(1100);
+  assert.ok(Math.abs(await page.evaluate(()=>scrollY)-beforeReverse)<3,'Changing wheel direction left a stale scroll target');
   const beforeKey=await page.evaluate(()=>scrollY);
   await page.keyboard.press('PageDown');
   await page.waitForTimeout(500);
@@ -190,7 +196,8 @@ async function main() {
         for(const id of ['#bijoux','#montres','#atelier']){
           await page.locator('.brochure-links a[href="'+id+'"]').click();
           await page.waitForFunction(id=>location.hash===id,id);
-          await page.waitForTimeout(700);
+          await page.waitForFunction(()=>!document.documentElement.dataset.scrollRunning);
+          assert.equal(await page.evaluate(()=>document.activeElement.id),id.slice(1),'Anchor navigation did not transfer keyboard focus');
           assert.ok(await page.evaluate(()=>scrollY)>viewport.height,'Brochure navigation did not scroll');
           await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
           await settled(page,0);
