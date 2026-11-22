@@ -15,7 +15,7 @@ const header = document.querySelector('.site-header');
 const slides = [...document.querySelectorAll('.counter-slide')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const mobile = matchMedia('(max-width:760px)');
-let gsap, ScrollTrigger, presentation, heroTrigger, media, destroySmoothScroll;
+let gsap, ScrollTrigger, presentation, heroTrigger, media, destroySmoothScroll, destroyLogoLoop;
 let ready = false, requested = -1, wanted = 0;
 
 function showHeader() { header.classList.add('visible'); header.inert = false; }
@@ -93,12 +93,11 @@ function initMotion() {
   });
   media = gsap.matchMedia();
   media.add('(prefers-reduced-motion: no-preference)', () => {
-    // Separate wrappers isolate the room, the photograph and the exit motion.
+    // The final ring stays on the counter while the hero scrolls out naturally.
     gsap.to('.counter-parallax', {y:() => -stage.clientHeight*.045, ease:'none',
       scrollTrigger:{trigger:hero,start:'top top',end:'bottom bottom',scrub:.18,invalidateOnRefresh:true}});
     const exit = gsap.timeline({scrollTrigger:{trigger:hero,start:'bottom bottom',end:'bottom 12%',scrub:.25,invalidateOnRefresh:true}});
-    exit.to('.counter-parallax', {x:() => innerWidth*.86, duration:.62, ease:'power1.in'}, 0)
-      .to('.counter-room', {yPercent:-5,scale:1.12,duration:1,ease:'none'},0)
+    exit.to('.counter-room', {yPercent:-5,scale:1.12,duration:1,ease:'none'},0)
       .to('.counter-progress', {autoAlpha:0,duration:.5},.05);
     const boutique = document.querySelector('#boutique');
     gsap.fromTo('.storefront-background', {yPercent:-9,scale:1.21}, {yPercent:3,scale:1.09,ease:'none',
@@ -201,6 +200,10 @@ document.querySelector('#current-year').textContent = new Date().getFullYear();
 try {
   await loadScript('gsap');await loadScript('ScrollTrigger');
   ({gsap,ScrollTrigger} = window);initMotion();
+  try {
+    const {initLogoLoop} = await import('./logo-loop.js?v=1');
+    destroyLogoLoop = initLogoLoop(document.querySelector('.exclusivities .logoloop'),gsap);
+  } catch (error) {console.warn('Logo animation unavailable; static brand list retained.',error);}
   // Scrolling is an optional enhancement; a failed load retains native input.
   try {
     const {initSmoothScroll} = await import('./smooth-scroll.js?v=1');
@@ -219,5 +222,5 @@ Promise.allSettled([images[0].decode(), document.querySelector('.counter-backgro
 window.addEventListener('scroll', showHeader, {passive:true,once:true});
 document.addEventListener('visibilitychange', () => {if(document.hidden)presentation?.pause();else presentation?.resume();});
 reduced.addEventListener('change', () => {present(wanted,true);refresh();});
-window.addEventListener('pagehide', event => {if(event.persisted)presentation?.pause();else{destroySmoothScroll?.();presentation?.kill();heroTrigger?.kill();media?.revert();}});
+window.addEventListener('pagehide', event => {if(event.persisted)presentation?.pause();else{destroyLogoLoop?.();destroySmoothScroll?.();presentation?.kill();heroTrigger?.kill();media?.revert();}});
 window.addEventListener('pageshow', event => {if(event.persisted){refresh();presentation?.resume();}});

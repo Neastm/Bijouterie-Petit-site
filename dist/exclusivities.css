@@ -1,0 +1,15 @@
+.exclusivities{position:relative;padding:31px 0 34px;background:linear-gradient(180deg,#f2e7d6,#fbf5eb);overflow:hidden;isolation:isolate}
+.exclusivities::before{content:'';display:block;width:88%;max-width:1300px;height:1px;margin:0 auto 27px;background:linear-gradient(90deg,transparent,#ad8b542b 20%,#ad8b542b 80%,transparent)}
+.exclusivities h2{text-align:center;font:400 31px/1.2 var(--serif);letter-spacing:-.025em;color:#806245;margin:0 24px 27px}
+.logoloop{position:relative;width:100%;overflow:hidden;touch-action:pan-y pinch-zoom;mask-image:linear-gradient(to right,transparent,#000 9%,#000 91%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,#000 9%,#000 91%,transparent)}
+.logoloop__track{display:flex;width:max-content;user-select:none;-webkit-user-select:none}
+.logoloop[data-running] .logoloop__track{will-change:transform}
+.logoloop__list{display:flex;align-items:center;flex:none;gap:0;list-style:none;margin:0;padding:0}
+.logoloop__item{flex:none;display:flex;align-items:center;justify-content:center;width:210px;height:46px;padding:0 30px;line-height:1}
+.logoloop__item img{display:block;object-fit:contain;width:auto;max-width:145px;height:auto;max-height:33px;filter:brightness(0);mix-blend-mode:multiply;opacity:.65;-webkit-user-drag:none;pointer-events:none}
+.logoloop__item[data-brand=tissot] img{max-width:145px;max-height:40px;filter:grayscale(1)}
+.logoloop__item[data-brand=herbelin] img{max-width:130px;max-height:36px}
+.logoloop__item[data-brand=festina] img{max-width:145px;max-height:44px;filter:grayscale(1)}
+@media(max-width:760px){.exclusivities{padding:24px 0 29px}.exclusivities::before{width:86%;margin-bottom:22px}.exclusivities h2{font-size:27px;margin-bottom:21px}.logoloop__item{width:166px;height:39px;padding:0 25px}.logoloop__item img{max-width:117px;max-height:26px}.logoloop__item[data-brand=tissot] img{max-width:92px;max-height:32px}.logoloop__item[data-brand=herbelin] img{max-width:110px;max-height:29px}.logoloop__item[data-brand=festina] img{max-width:105px;max-height:31px}}
+@media(prefers-reduced-motion:reduce){.logoloop{mask-image:none;-webkit-mask-image:none}.logoloop__track{width:100%;transform:none!important}.logoloop__list:not([aria-hidden]){width:100%;flex-wrap:wrap;justify-content:center;gap:15px 0}.logoloop__list[aria-hidden]{display:none}.logoloop__item{width:180px}.logoloop__track{will-change:auto!important}}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){.logoloop__item{width:33.333%;padding:0 14px}.logoloop__item img{max-width:100%!important}}

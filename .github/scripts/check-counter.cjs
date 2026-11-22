@@ -205,11 +205,15 @@ async function main() {
       }
       await page.evaluate(() => {
         const hero=document.querySelector('.counter-hero');
-        scrollTo({top:hero.offsetHeight-innerHeight*.35,behavior:'instant'});
+        scrollTo({top:hero.offsetHeight-innerHeight*.75,behavior:'instant'});
       });
       await page.waitForTimeout(500);
-      assert.ok(await page.locator('.counter-parallax').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41)>viewport.width*.5,'The hand did not retreat during the section transition');
-      for (const selector of ['#boutique','#venir','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
+      await settled(page,1);
+      assert.ok(Math.abs(await page.locator('.counter-parallax').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41))<1,'The ring withdrew sideways at the section transition');
+      const ringAtExit=await framing(page,1);
+      assert.ok(ringAtExit.box.left<viewport.width && ringAtExit.box.right>0 && ringAtExit.box.top<ringAtExit.stage.bottom && ringAtExit.box.bottom>0,'The ring vanished before the hero left the screen');
+      if([390,1440].includes(viewport.width))console.log('PETIT_CAPTURE '+viewport.width+'-ring-transition '+(await page.screenshot({type:'jpeg',quality:40})).toString('base64'));
+      for (const selector of ['#boutique','#venir','#exclusivites','#maison','#univers','#atelier','.faq','#rendez-vous','footer']) {
         await page.locator(selector).scrollIntoViewIfNeeded();
         await page.waitForTimeout(['#maison','#venir'].includes(selector)?1700:950);
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1),'Section overflows at '+viewport.width+' '+selector);
@@ -217,7 +221,7 @@ async function main() {
         if(await heading.count())assert.ok(await heading.evaluate(el=>parseFloat(getComputedStyle(el).opacity)>.95),'Invisible heading '+selector);
         if([390,1440].includes(viewport.width)) {
           await page.screenshot({path:path.join(output,viewport.width+'-'+selector.replace(/[^a-z]/gi,'')+'.png')});
-          if(['#venir','#maison'].includes(selector))console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.locator(selector).screenshot({type:'jpeg',quality:38,style:'.site-header,.skip-link{display:none!important}'})).toString('base64'));
+          if(['#venir','#maison','#exclusivites'].includes(selector))console.log('PETIT_CAPTURE '+viewport.width+'-'+selector.slice(1)+' '+(await page.locator(selector).screenshot({type:'jpeg',quality:48,style:'.site-header,.skip-link{display:none!important}'})).toString('base64'));
           if(selector==='#univers'){
             await page.locator('#bijoux').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
             await page.locator('#montres').scrollIntoViewIfNeeded();await page.waitForTimeout(1100);
@@ -229,6 +233,20 @@ async function main() {
       assert.equal(await page.locator('.counter-sleeve').count(),0,'Repeated sleeve extension is still present');
       assert.equal(await page.locator('.family-lineage li').count(),3);
       assert.equal(await page.locator('.collection-scene').count(),2);
+      const brands=page.locator('.logoloop__list:not([aria-hidden]) img');
+      assert.equal(await brands.count(),5,'The brand list is incomplete');
+      assert.ok(await brands.evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0)),'A brand logo did not load');
+      assert.equal(await page.locator('#venir').evaluate(el=>el.nextElementSibling.id),'exclusivites');
+      assert.equal(await page.locator('#exclusivites').evaluate(el=>el.nextElementSibling.id),'maison');
+      await page.evaluate(()=>scrollTo({top:document.querySelector('#exclusivites').offsetTop-120,behavior:'instant'}));
+      await page.mouse.move(2,2);
+      await page.waitForFunction(()=>document.querySelector('.logoloop').dataset.running==='true');
+      await page.waitForTimeout(500);
+      const logoX=await page.locator('.logoloop__track').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41);
+      await page.waitForTimeout(550);
+      const nextLogoX=await page.locator('.logoloop__track').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m41);
+      assert.ok(Math.abs(nextLogoX-logoX)>10,'The logo loop is not moving');
+      assert.ok(await page.locator('#exclusivites').evaluate(el=>el.offsetHeight<210),'The brand band is too tall');
       assert.ok(await page.locator('.map-art img').evaluate(el=>el.complete&&el.naturalWidth>0),'The geographic map failed to load');
       await page.locator('#venir').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#local-map iframe').count(),0,'Map must not load before it is requested');
@@ -269,6 +287,11 @@ async function main() {
       await page.emulateMedia({reducedMotion:'reduce'});
       await page.waitForFunction(()=>document.documentElement.dataset.scrollMode==='native');
       assert.equal(await page.locator('html').evaluate(el=>el.classList.contains('lenis')),false,'Reduced motion retained the wheel interceptor');
+      await page.locator('#exclusivites').scrollIntoViewIfNeeded();
+      await page.waitForTimeout(100);
+      assert.equal(await page.locator('.logoloop').getAttribute('data-running'),null,'The logo loop ignored reduced motion');
+      assert.equal(await page.locator('.logoloop__track').evaluate(el=>getComputedStyle(el).transform),'none');
+      assert.ok(await brands.evaluateAll(images=>images.every(image=>{const r=image.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;})),'A static reduced-motion logo is cropped');
       await page.locator('#rendez-vous').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#appointment-form').evaluate(el=>getComputedStyle(el).opacity),'1');
       if(viewport.width===390){
