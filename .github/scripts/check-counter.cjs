@@ -49,6 +49,46 @@ async function framing(page, index) {
   }, index);
 }
 
+async function verifySmoothScroll(page, viewport) {
+  await page.waitForFunction(()=>document.documentElement.dataset.scrollMode==='smooth');
+  // Test the actual wheel, rather than calling the scrolling library directly.
+  // The same easing must work at the hero, mid-page and near the footer.
+  for (const fraction of [0,.45,.8]) {
+    await page.evaluate(fraction=>scrollTo({top:(document.documentElement.scrollHeight-innerHeight)*fraction,behavior:'instant'}),fraction);
+    await page.waitForTimeout(100);
+    await page.mouse.move(viewport.width*.96,viewport.height*.7);
+    const start=await page.evaluate(()=>scrollY);
+    await page.evaluate(()=>{
+      window.petitScrollSamples=[];
+      window.petitSampleUntil=performance.now()+950;
+      function sample(){window.petitScrollSamples.push(scrollY);if(performance.now()<window.petitSampleUntil)requestAnimationFrame(sample);}
+      requestAnimationFrame(sample);
+    });
+    await page.mouse.wheel(0,420);
+    await page.waitForTimeout(1100);
+    const values=await page.evaluate(()=>window.petitScrollSamples);
+    const final=await page.evaluate(()=>scrollY);
+    const distinct=new Set(values.map(Math.round));
+    assert.ok(final-start>350 && final-start<400,'Wheel distance was lost or exaggerated: '+(final-start));
+    assert.ok(distinct.size>=7,'Wheel did not interpolate through enough frames');
+    assert.ok(values.every((value,index)=>index===0 || value>=values[index-1]-1),'Scroll jumped backwards');
+    assert.equal(await page.evaluate(()=>document.documentElement.dataset.scrollRunning),undefined,'Smoothing continues rendering after idle');
+  }
+  const beforeKey=await page.evaluate(()=>scrollY);
+  await page.keyboard.press('PageDown');
+  await page.waitForTimeout(500);
+  const afterKey=await page.evaluate(()=>scrollY);
+  assert.ok(afterKey>beforeKey+20,'Keyboard scrolling failed');
+  await page.keyboard.press('Home');
+  await page.waitForTimeout(500);
+  // Test native immediate repositioning after the smoothing finishes.
+  await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+  await page.waitForTimeout(150);
+  assert.ok(await page.evaluate(()=>scrollY)<2,'Inertia pulled an explicit scroll position back');
+  await settled(page,0);
+  console.log('Smooth wheel verified across the page at '+viewport.width+'px; ticker sleeps at idle.');
+}
+
 async function main() {
   await new Promise(resolve => server.listen(4173, '127.0.0.1', resolve));
   const geography=JSON.parse(fs.readFileSync(path.join(root,'assets/ales-neighbourhood.json'),'utf8'));
@@ -66,6 +106,7 @@ async function main() {
       assert.equal(await page.locator('body').innerText().then(text=>text.includes('\uFFFD')),false,'Text encoding was damaged');
       assert.equal(await page.locator('.counter-product-name').count(), 0);
       assert.equal(await page.locator('#gold-river').count(), 0);
+      await verifySmoothScroll(page,viewport);
       let paperPosition;
       for (const index of [0,1]) {
         if (index === 1) {
@@ -219,6 +260,8 @@ async function main() {
         assert.equal(await page.locator('.menu-toggle').getAttribute('aria-expanded'),'false');
       }
       await page.emulateMedia({reducedMotion:'reduce'});
+      await page.waitForFunction(()=>document.documentElement.dataset.scrollMode==='native');
+      assert.equal(await page.locator('html').evaluate(el=>el.classList.contains('lenis')),false,'Reduced motion retained the wheel interceptor');
       await page.locator('#rendez-vous').scrollIntoViewIfNeeded();
       assert.equal(await page.locator('#appointment-form').evaluate(el=>getComputedStyle(el).opacity),'1');
       if(viewport.width===390){
@@ -242,7 +285,7 @@ async function main() {
       await page.close();
     }
     assert.deepEqual(errors, [], 'Browser errors');
-    console.log('Chrome verified anchored brochures without parallax, real geocoded OSM map, family and collections, product handoff, navigation, native scroll, itinerary and reduced motion in six viewports.');
+    console.log('Chrome verified smooth wheel throughout the page, idle suspension, native touch and keyboard, anchored brochures, map, family and collections, product handoff, navigation and reduced motion in six viewports.');
   } finally {
     await browser.close();
     server.close();

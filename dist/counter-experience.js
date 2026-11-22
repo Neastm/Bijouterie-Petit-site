@@ -15,7 +15,7 @@ const header = document.querySelector('.site-header');
 const slides = [...document.querySelectorAll('.counter-slide')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const mobile = matchMedia('(max-width:760px)');
-let gsap, ScrollTrigger, presentation, heroTrigger, media;
+let gsap, ScrollTrigger, presentation, heroTrigger, media, destroySmoothScroll;
 let ready = false, requested = -1, wanted = 0;
 
 function showHeader() { header.classList.add('visible'); header.inert = false; }
@@ -82,7 +82,7 @@ function present(index, force = false) {
 function refresh() { ScrollTrigger?.refresh(); }
 function initMotion() {
   gsap.registerPlugin(ScrollTrigger);
-  // Native scrolling controls progress; no wheel/touch interception or snap.
+  // Window scroll positions control progress; no transformed scrolling wrapper.
   heroTrigger = ScrollTrigger.create({
     trigger:hero, start:'top top', end:'bottom bottom',
     onUpdate:self => {
@@ -201,6 +201,11 @@ document.querySelector('#current-year').textContent = new Date().getFullYear();
 try {
   await loadScript('gsap');await loadScript('ScrollTrigger');
   ({gsap,ScrollTrigger} = window);initMotion();
+  // Scrolling is an optional enhancement; a failed load retains native input.
+  try {
+    const {initSmoothScroll} = await import('./smooth-scroll.js?v=1');
+    destroySmoothScroll = initSmoothScroll(gsap,ScrollTrigger);
+  } catch (error) {console.warn('Smooth scrolling unavailable; native scrolling retained.',error);}
 } catch (error) {
   console.warn('Animation unavailable; static presentation retained.',error);
 }
@@ -214,5 +219,5 @@ Promise.allSettled([images[0].decode(), document.querySelector('.counter-backgro
 window.addEventListener('scroll', showHeader, {passive:true,once:true});
 document.addEventListener('visibilitychange', () => {if(document.hidden)presentation?.pause();else presentation?.resume();});
 reduced.addEventListener('change', () => {present(wanted,true);refresh();});
-window.addEventListener('pagehide', event => {if(event.persisted)presentation?.pause();else{presentation?.kill();heroTrigger?.kill();media?.revert();}});
+window.addEventListener('pagehide', event => {if(event.persisted)presentation?.pause();else{destroySmoothScroll?.();presentation?.kill();heroTrigger?.kill();media?.revert();}});
 window.addEventListener('pageshow', event => {if(event.persisted){refresh();presentation?.resume();}});

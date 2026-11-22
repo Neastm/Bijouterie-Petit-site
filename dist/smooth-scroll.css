@@ -1,0 +1,5 @@
+@import url('./vendor/lenis/lenis.css');
+/* Lenis writes native scroll positions. Prevent a second CSS easing pass. */
+html.lenis {scroll-behavior:auto!important}
+/* Native CSS anchor easing remains available when JS is unavailable. */
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
