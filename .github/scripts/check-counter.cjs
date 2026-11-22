@@ -235,7 +235,8 @@ async function main() {
       assert.equal(await page.locator('.collection-scene').count(),2);
       const brands=page.locator('.logoloop__list:not([aria-hidden]) img');
       assert.equal(await brands.count(),5,'The brand list is incomplete');
-      assert.ok(await brands.evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0)),'A brand logo did not load');
+      const logoStates=await brands.evaluateAll(images=>images.map(image=>({brand:image.alt,loaded:image.complete&&image.naturalWidth>0})));
+      assert.ok(logoStates.every(image=>image.loaded),'A brand logo did not load: '+JSON.stringify(logoStates));
       assert.equal(await page.locator('#venir').evaluate(el=>el.nextElementSibling.id),'exclusivites');
       assert.equal(await page.locator('#exclusivites').evaluate(el=>el.nextElementSibling.id),'maison');
       await page.evaluate(()=>scrollTo({top:document.querySelector('#exclusivites').offsetTop-120,behavior:'instant'}));

@@ -53,7 +53,9 @@ export function initLogoLoop(root,gsap) {
   root.addEventListener('pointerenter',enter);root.addEventListener('pointerleave',leave);
   document.addEventListener('visibilitychange',visibility);
   motion.addEventListener('change',measure);
-  sequence.querySelectorAll('img').forEach(image=>image.addEventListener('load',measure));
+  // Fetch the complete short sequence, including logos initially outside the
+  // viewport. Otherwise native lazy loading leaves gaps when the track loops.
+  sequence.querySelectorAll('img').forEach(image=>{image.addEventListener('load',measure);image.loading='eager';});
   measure();
   return()=>{
     pause();observer.disconnect();resize.disconnect();
