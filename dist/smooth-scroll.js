@@ -48,7 +48,7 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
     lenis.on('virtual-scroll', () => queueMicrotask(wake));
   }
   function navigate(event) {
-    if (!lenis || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
     const link = event.target.closest?.('a[href]');
     if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
     const url = new URL(link.href, location.href);
@@ -56,6 +56,13 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
     let target;
     try {target = document.getElementById(decodeURIComponent(url.hash.slice(1)));} catch {return;}
     if (!target) return;
+    if(!lenis){
+      const temporary=!target.hasAttribute('tabindex');
+      if(temporary)target.setAttribute('tabindex','-1');
+      target.focus({preventScroll:true});
+      if(temporary)target.addEventListener('blur',()=>target.removeAttribute('tabindex'),{once:true});
+      return;
+    }
     event.preventDefault();
     if (location.hash !== url.hash) history.pushState(null, '', url.hash);
     lenis.resize();

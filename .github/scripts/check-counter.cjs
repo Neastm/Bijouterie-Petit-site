@@ -201,6 +201,7 @@ async function main() {
           await page.locator('.brochure-links a[href="'+id+'"]').click();
           await page.waitForFunction(id=>location.hash===id,id);
           await page.waitForFunction(()=>!document.documentElement.dataset.scrollRunning);
+          await page.waitForFunction(()=>scrollY>innerHeight);
           assert.equal(await page.evaluate(()=>document.activeElement.id),id.slice(1),'Anchor navigation did not transfer keyboard focus');
           assert.ok(await page.evaluate(()=>scrollY)>viewport.height,'Brochure navigation did not scroll');
           await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
