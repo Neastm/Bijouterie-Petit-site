@@ -17,11 +17,12 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+new URL
  metrics[baseline?'before':'after']=await page.evaluate(touchWrites=>({refreshes:probe.refreshes,touchWrites,mode:document.documentElement.dataset.scrollMode}),touchWrites);
  if(!baseline){
    assert.equal(metrics.after.refreshes,0,'Image completion refreshed scrolling mid-gesture');assert.equal(touchWrites,0,'Touch start forced a scroll write');assert.equal(metrics.after.mode,'native');
-   await page.evaluate(()=>scrollTo({top:document.querySelector('.counter-hero').offsetHeight-innerHeight*1.15,behavior:'instant'}));await page.waitForTimeout(150);
+   await page.evaluate(()=>scrollTo({top:document.querySelector('.counter-hero').offsetHeight-innerHeight*1.75,behavior:'instant'}));await page.waitForTimeout(150);
    const before=await page.locator('.counter-room').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m22);
-   await page.evaluate(()=>scrollBy({top:innerHeight*.4,behavior:'instant'}));await page.waitForTimeout(1700);
+   await page.evaluate(()=>scrollBy({top:innerHeight*.4,behavior:'instant'}));await page.waitForFunction(()=>document.querySelector('.counter-hero').dataset.motionState==='idle');
    const after=await page.locator('.counter-room').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m22);
-   assert.ok(after>before+.015,'Mobile transition has no visible parallax');
+   assert.ok(after>before+.008,'Mobile transition has no visible parallax');
+   assert.equal(await page.locator('.counter-stage').evaluate(el=>Math.round(el.clientHeight)),844,'The counter framing changed');
    const next=await page.locator('#boutique').boundingBox();assert.ok(next.y<844 && next.y>0,'Next section is not visible alongside the counter');
    await page.screenshot({path:path.join(out,name+'-mobile-parallax.png')});console.log('PETIT_CAPTURE '+name+'-mobile-parallax '+(await page.screenshot({type:'jpeg',quality:45})).toString('base64'));
    await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);assert.equal(await page.locator('.counter-room').evaluate(el=>getComputedStyle(el).transform),'none');

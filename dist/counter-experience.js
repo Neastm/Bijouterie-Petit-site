@@ -96,8 +96,8 @@ function initMotion() {
   media.add('(max-width:760px) and (prefers-reduced-motion: no-preference)', () => {
     // Reveal the following photograph while the counter recedes. The printed
     // brochures remain attached to the room; text and glass panels stay still.
-    gsap.to('.counter-room',{yPercent:-5,scale:1.07,ease:'none',
-      scrollTrigger:{trigger:hero,start:'bottom 125%',end:'bottom 35%',scrub:true,invalidateOnRefresh:true}});
+    gsap.to('.counter-room, .counter-parallax',{yPercent:-3,scale:1.03,ease:'none',
+      scrollTrigger:{trigger:hero,start:'bottom 200%',end:'bottom 100%',scrub:true,invalidateOnRefresh:true}});
     gsap.fromTo('.storefront-background',{yPercent:-7,scale:1.14},{yPercent:3,scale:1.14,ease:'none',
       scrollTrigger:{trigger:'#boutique',start:'top bottom',end:'top top',scrub:true}});
   });

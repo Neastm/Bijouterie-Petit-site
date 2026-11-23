@@ -166,7 +166,7 @@ async function main() {
           console.log('Empty interval at '+viewport.width+'px: '+Math.round(blank)+' ms');
         }
         const result = await framing(page, index);
-        const paperNow=await page.locator('.counter-brochure').boundingBox();
+        const paperNow=await page.locator('.counter-brochure').evaluate(el=>({x:el.offsetLeft,y:el.offsetTop}));
         if(index===0)paperPosition=paperNow;
         else assert.ok(Math.abs(paperNow.x-paperPosition.x)<1 && Math.abs(paperNow.y-paperPosition.y)<1,'The brochure drifted relative to the counter');
         assert.equal(await page.locator('.counter-room .counter-stationery').count(),1,'The paper is not attached to the room');
