@@ -23,7 +23,9 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+new URL
    const after=await page.locator('.counter-room').evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m22);
    assert.ok(after>before+.008,'Mobile transition has no visible parallax');
    assert.equal(await page.locator('.counter-stage').evaluate(el=>Math.round(el.clientHeight)),844,'The counter framing changed');
-   const next=await page.locator('#boutique').boundingBox();assert.ok(next.y<844 && next.y>0,'Next section is not visible alongside the counter');
+   const lip=await page.locator('.counter-wood-lip').boundingBox();
+   const next=await page.locator('#boutique').boundingBox();
+   assert.ok(lip&&Math.abs(lip.y-next.y)<1&&lip.height>=52&&lip.height<90,'Wood must lead the incoming section');assert.ok(next.y<844 && next.y>0,'Next section is not visible alongside the counter');
    await page.screenshot({path:path.join(out,name+'-mobile-parallax.png')});console.log('PETIT_CAPTURE '+name+'-mobile-parallax '+(await page.screenshot({type:'jpeg',quality:45})).toString('base64'));
    await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);assert.equal(await page.locator('.counter-room').evaluate(el=>getComputedStyle(el).transform),'none');
  }

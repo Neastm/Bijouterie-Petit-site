@@ -61,21 +61,22 @@ function present(index, force = false) {
   }
   presentation = gsap.timeline({paused:true,onComplete:finish,defaults:{overwrite:'auto'}});
   let enterAt = 0;
+  const switching = outgoing && outgoing !== target;
   if (outgoing && outgoing !== target) {
     const hand = outgoing.querySelector('.counter-arrival');
     const leaveX = Number(gsap.getProperty(hand,'x')) + Math.max(0,edge-(hand.getBoundingClientRect().left-planeX));
-    presentation.to(hand, {x:leaveX,y:-3,duration:.65,ease:'power2.inOut'},0);
-    presentation.call(() => {outgoing.hidden = true;},null,.65);
+    presentation.to(hand, {x:leaveX,y:-3,duration:.21,ease:'power2.inOut'},0);
+    presentation.call(() => {outgoing.hidden = true;},null,.21);
     // A real-time pause, independent of scroll speed, separates the two gestures.
-    enterAt = .85;
+    enterAt = .25;
   }
   if (outgoing !== target) {
     presentation.call(() => {target.hidden = false;}, null, enterAt);
   }
   // The entire photograph moves together: no rotation, stretching or floating box.
-  presentation.to(arrival, {x:0,y:0,duration:.85,ease:'power2.inOut',force3D:true},enterAt);
+  presentation.to(arrival, {x:0,y:0,duration:switching?.25:.85,ease:'power2.inOut',force3D:true},enterAt);
   presentation.fromTo(target.querySelector('.counter-contact-shadow'),
-    {opacity:.25, scaleX:.94}, {opacity:1, scaleX:1, duration:.45, ease:'sine.out'}, enterAt+.16);
+    {opacity:.25, scaleX:.94}, {opacity:1, scaleX:1, duration:switching?.18:.45, ease:'sine.out'}, enterAt+(switching?.03:.16));
   if (!document.hidden) presentation.play();
 }
 

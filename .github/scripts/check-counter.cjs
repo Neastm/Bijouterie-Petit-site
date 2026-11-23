@@ -121,7 +121,7 @@ async function main() {
       for (const index of [0,1]) {
         if (index === 1) {
           await page.evaluate(() => {
-            window.petitBlank = {max:0,since:0,run:true,retirements:[]};
+            window.petitBlank = {started:performance.now(),max:0,since:0,run:true,retirements:[]};
             const hidden=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'hidden');
             document.querySelectorAll('.counter-slide').forEach(slide=>Object.defineProperty(slide,'hidden',{
               configurable:true,
@@ -159,8 +159,10 @@ async function main() {
             window.petitBlank.run = false;
             return window.petitBlank.max;
           });
-          assert.ok(blank < 1000, 'Empty counter exceeded one second');
-          assert.ok(blank >= 140,'The handoff did not leave a visible pause');
+          const switchElapsed=await page.evaluate(()=>performance.now()-window.petitBlank.started);
+          assert.ok(switchElapsed>=400 && switchElapsed<900,'The half-second handoff took '+Math.round(switchElapsed)+'ms');
+          assert.ok(blank < 500, 'Empty counter exceeded half a second');
+          assert.ok(blank >= 30,'The handoff did not leave a visible pause');
           const retirements=await page.evaluate(()=>window.petitBlank.retirements);
           assert.ok(retirements.length>0 && retirements.every(left=>left>=viewport.width), 'A photograph was hidden before clearing the frame');
           console.log('Empty interval at '+viewport.width+'px: '+Math.round(blank)+' ms');
