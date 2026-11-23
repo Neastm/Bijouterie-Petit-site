@@ -19,7 +19,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: "pages-browser-checks"
   cancel-in-progress: false
 
 jobs:
@@ -29,6 +29,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-24.04
+    container: mcr.microsoft.com/playwright:v1.56.1-noble
+    env:
+      PETIT_BUNDLED_BROWSER: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,8 +39,6 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install the browser test dependency
         run: npm install --prefix "$RUNNER_TEMP/petit-ui" --no-audit --no-fund playwright@1.56.1
-      - name: Install WebKit for mobile regression checks
-        run: npx --prefix "$RUNNER_TEMP/petit-ui" playwright install --with-deps webkit
       - name: Compare native mobile scrolling in Chrome and WebKit
         env:
           PETIT_TEST_TOOLS: ${{ runner.temp }}/petit-ui

@@ -104,7 +104,7 @@ async function main() {
   const geography=JSON.parse(fs.readFileSync(path.join(root,'assets/ales-neighbourhood.json'),'utf8'));
   assert.ok(geography.score>=.65 && geography.ways>20 && geography.nodes>30,'Unverified map source');
   assert.ok(Math.abs(geography.point.x-50)<.1 && Math.abs(geography.point.y-50)<.1,'The photo marker does not match the geocoded point');
-  const browser = await chromium.launch({channel: 'chrome', headless: true});
+  const browser = await chromium.launch({...(process.env.PETIT_BUNDLED_BROWSER?{}:{channel:'chrome'}), headless:true});
   const errors = [];
   try {
     for (const viewport of [{width:390,height:844},{width:320,height:568},{width:768,height:1024},{width:1440,height:900},{width:1920,height:1080},{width:844,height:390}]) {

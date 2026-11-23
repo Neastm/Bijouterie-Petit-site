@@ -4,7 +4,7 @@ const root=path.resolve('dist'),out=path.join(process.env.RUNNER_TEMP,'petit-lay
 const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!p.startsWith(root+path.sep))return res.writeHead(403).end();fs.readFile(p,(err,b)=>{if(err)return res.writeHead(404).end();res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.html':'text/html'})[path.extname(p)]||'application/octet-stream');res.end(b);});});
 (async()=>{await new Promise(r=>server.listen(4180,'127.0.0.1',r));try{
  for(const [name,type] of [['Chrome',chromium],['WebKit',webkit]]){
- const browser=await type.launch(name==='Chrome'?{channel:'chrome'}:{});
+ const browser=await type.launch(name==='Chrome'&&!process.env.PETIT_BUNDLED_BROWSER?{channel:'chrome'}:{});
  try{const metrics={};for(const baseline of [true,false]){
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
