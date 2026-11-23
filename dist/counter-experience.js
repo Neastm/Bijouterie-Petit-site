@@ -82,6 +82,7 @@ function present(index, force = false) {
 function refresh() { ScrollTrigger?.refresh(); }
 function initMotion() {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ignoreMobileResize:true});
   // Window scroll positions control progress; no transformed scrolling wrapper.
   heroTrigger = ScrollTrigger.create({
     trigger:hero, start:'top top', end:'bottom bottom',
@@ -92,6 +93,14 @@ function initMotion() {
     }
   });
   media = gsap.matchMedia();
+  media.add('(max-width:760px) and (prefers-reduced-motion: no-preference)', () => {
+    // Reveal the following photograph while the counter recedes. The printed
+    // brochures remain attached to the room; text and glass panels stay still.
+    gsap.to('.counter-room',{yPercent:-5,scale:1.07,ease:'none',
+      scrollTrigger:{trigger:hero,start:'bottom 125%',end:'bottom 35%',scrub:true,invalidateOnRefresh:true}});
+    gsap.fromTo('.storefront-background',{yPercent:-7,scale:1.14},{yPercent:3,scale:1.14,ease:'none',
+      scrollTrigger:{trigger:'#boutique',start:'top bottom',end:'top top',scrub:true}});
+  });
   // Touch scrolling stays compositor-driven: no text reveals, scrubbed photos
   // or transformed backdrop-filter panels on phones (particularly iOS Safari).
   media.add('(min-width: 761px) and (prefers-reduced-motion: no-preference)', () => {
@@ -130,7 +139,8 @@ function initMotion() {
   });
   document.fonts.ready.then(refresh);
   document.querySelectorAll('details').forEach(detail => detail.addEventListener('toggle', refresh));
-  document.querySelectorAll('img[loading="lazy"]').forEach(image => image.addEventListener('load', refresh, {once:true}));
+  // Images already have reserved dimensions. Loading their pixels does not
+  // change section geometry and must not refresh every trigger during a swipe.
 }
 
 // The location feature works independently of the animation library.
@@ -208,7 +218,7 @@ try {
   } catch (error) {console.warn('Logo animation unavailable; static brand list retained.',error);}
   // Scrolling is an optional enhancement; a failed load retains native input.
   try {
-    const {initSmoothScroll} = await import('./smooth-scroll.js?v=1');
+    const {initSmoothScroll} = await import('./smooth-scroll.js?v=2');
     destroySmoothScroll = initSmoothScroll(gsap,ScrollTrigger);
   } catch (error) {console.warn('Smooth scrolling unavailable; native scrolling retained.',error);}
 } catch (error) {
@@ -226,3 +236,4 @@ document.addEventListener('visibilitychange', () => {if(document.hidden)presenta
 reduced.addEventListener('change', () => {present(wanted,true);refresh();});
 window.addEventListener('pagehide', event => {if(event.persisted)presentation?.pause();else{destroyLogoLoop?.();destroySmoothScroll?.();presentation?.kill();heroTrigger?.kill();media?.revert();}});
 window.addEventListener('pageshow', event => {if(event.persisted){refresh();presentation?.resume();}});
+

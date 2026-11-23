@@ -12,3 +12,9 @@
 .collection-copy .underlined{font-size:12px;color:#f2d79c}
 @media(max-width:760px){.counter-hero{height:310svh}.universe-grid{gap:26px}.collection-scene,.collection-scene:nth-child(2){height:95svh;min-height:620px;max-height:760px;border-radius:20px}.collection-scene .collection-copy,.collection-scene:nth-child(2) .collection-copy{left:16px;right:16px;bottom:16px;width:auto;max-width:none;padding:22px;border-radius:17px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.collection-copy h3{font-size:30px;max-width:280px;margin-bottom:12px}.collection-copy p{font-size:12px;line-height:1.7;margin-bottom:10px}.collection-scene .collection-photo img,.collection-scene:nth-child(2) .collection-photo img{object-position:50% 20%}.counter-storefront .storefront-copy{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
 @media(prefers-reduced-motion:reduce){.counter-hero{height:150svh}}
+@media(max-width:760px) and (prefers-reduced-motion:no-preference){
+  .counter-stage{height:92svh}
+  .counter-storefront{margin-top:-8svh}
+  .storefront-background{will-change:transform}
+}
+

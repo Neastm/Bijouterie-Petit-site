@@ -36,6 +36,12 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install the browser test dependency
         run: npm install --prefix "$RUNNER_TEMP/petit-ui" --no-audit --no-fund playwright@1.56.1
+      - name: Install WebKit for mobile regression checks
+        run: npx --prefix "$RUNNER_TEMP/petit-ui" playwright install --with-deps webkit
+      - name: Compare native mobile scrolling in Chrome and WebKit
+        env:
+          PETIT_TEST_TOOLS: ${{ runner.temp }}/petit-ui
+        run: node .github/scripts/check-mobile-scroll.cjs
       - name: Prepare the real neighbourhood map
         run: node tools/build-neighbourhood-map.cjs
       - name: Verify mobile and desktop counter presentations
@@ -74,4 +80,5 @@ jobs:
         uses: actions/deploy-pages@v5
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+
 

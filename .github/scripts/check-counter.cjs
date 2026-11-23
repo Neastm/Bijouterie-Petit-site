@@ -50,6 +50,10 @@ async function framing(page, index) {
 }
 
 async function verifySmoothScroll(page, viewport) {
+  if(await page.evaluate(()=>matchMedia('(pointer:coarse)').matches)){
+    await page.waitForFunction(()=>document.documentElement.dataset.scrollMode==='native');
+    return;
+  }
   await page.waitForFunction(()=>document.documentElement.dataset.scrollMode==='smooth');
   // Test the actual wheel, rather than calling the scrolling library directly.
   // The same easing must work at the hero, mid-page and near the footer.
@@ -331,3 +335,4 @@ async function main() {
   }
 }
 main().catch(error => {console.error(error);server.close();process.exitCode=1;});
+

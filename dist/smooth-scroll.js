@@ -4,6 +4,7 @@ import {Lenis} from './vendor/lenis/lenis.js';
 // retain their native geometry. Only wheel input receives an easing curve.
 export function initSmoothScroll(gsap, ScrollTrigger) {
   const preference = matchMedia('(prefers-reduced-motion: reduce)');
+  const precisePointer = matchMedia('(pointer:fine)');
   const root = document.documentElement;
   let lenis, ticking = false, disposed = false;
 
@@ -33,7 +34,7 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
     lenis?.destroy();
     lenis = undefined;
     root.dataset.scrollMode = 'native';
-    if (preference.matches || disposed) return;
+    if (preference.matches || !precisePointer.matches || disposed) return;
     lenis = new Lenis({
       autoRaf:false, smoothWheel:true, syncTouch:false,
       lerp:.12, wheelMultiplier:.9, anchors:false,
@@ -78,10 +79,10 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
   function refreshSize() {lenis?.resize();}
 
   preference.addEventListener('change',configure);
+  precisePointer.addEventListener('change',configure);
   document.addEventListener('click',navigate);
   document.addEventListener('keydown',keyboard);
   window.addEventListener('pointerdown',cancelInertia,{passive:true});
-  window.addEventListener('touchstart',cancelInertia,{passive:true});
   document.addEventListener('visibilitychange',visibility);
   window.addEventListener('popstate',cancelInertia);
   window.addEventListener('pageshow',restore);
@@ -92,10 +93,10 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
     disposed = true;
     cancelInertia();lenis?.destroy();lenis = undefined;
     preference.removeEventListener('change',configure);
+    precisePointer.removeEventListener('change',configure);
     document.removeEventListener('click',navigate);
     document.removeEventListener('keydown',keyboard);
     window.removeEventListener('pointerdown',cancelInertia);
-    window.removeEventListener('touchstart',cancelInertia);
     document.removeEventListener('visibilitychange',visibility);
     window.removeEventListener('popstate',cancelInertia);
     window.removeEventListener('pageshow',restore);
@@ -103,3 +104,4 @@ export function initSmoothScroll(gsap, ScrollTrigger) {
     delete root.dataset.scrollMode;
   };
 }
+
