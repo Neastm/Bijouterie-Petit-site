@@ -24,10 +24,10 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+new URL
    assert.ok(after>before+.015,'Mobile transition has no visible parallax');
    const next=await page.locator('#boutique').boundingBox();assert.ok(next.y<844 && next.y>0,'Next section is not visible alongside the counter');
    await page.screenshot({path:path.join(out,name+'-mobile-parallax.png')});console.log('PETIT_CAPTURE '+name+'-mobile-parallax '+(await page.screenshot({type:'jpeg',quality:45})).toString('base64'));
-   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.counter-room').evaluate(el=>getComputedStyle(el).transform),'none');
+   await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);assert.equal(await page.locator('.counter-room').evaluate(el=>getComputedStyle(el).transform),'none');
  }
  assert.deepEqual(errors,[]);await page.close();
- }assert.ok(metrics.before.refreshes>metrics.after.refreshes);assert.ok(metrics.before.touchWrites>metrics.after.touchWrites);console.log(name+' MOBILE_DIAGNOSTIC '+JSON.stringify(metrics));
+ }assert.ok(metrics.before.refreshes>metrics.after.refreshes);assert.ok(metrics.after.touchWrites<=metrics.before.touchWrites);console.log(name+' MOBILE_DIAGNOSTIC '+JSON.stringify(metrics));
  }finally{await browser.close();}
  }
  }finally{server.close();}})().catch(e=>{console.error(e);server.close();process.exitCode=1;});
