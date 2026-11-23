@@ -68,7 +68,7 @@ jobs:
         shell: bash
         run: |
           for attempt in {1..15}; do
-            count="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=$ARTIFACT_NAME" --jq '.total_count')"
+            count="$(node -e 'fetch("https://api.github.com/repos/"+process.env.GITHUB_REPOSITORY+"/actions/runs/"+process.env.GITHUB_RUN_ID+"/artifacts?name="+encodeURIComponent(process.env.ARTIFACT_NAME),{headers:{authorization:"Bearer "+process.env.GH_TOKEN,"X-GitHub-Api-Version":"2022-11-28"}}).then(r=>{if(!r.ok)throw Error("Artifact lookup failed: "+r.status);return r.json()}).then(j=>console.log(j.total_count))')"
             if [ "$count" -eq 1 ]; then
               exit 0
             fi
